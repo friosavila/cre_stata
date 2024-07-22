@@ -1,0 +1,65 @@
+---
+title: "Simplifying the Application of Correlated Random Effects"
+format:
+  simart-pdf:  
+    keep-tex: true  
+    fontsize: 11pt
+    number-depth: 3
+  docx: default
+crossref:
+  custom:
+    - kind: float
+      reference-prefix: Table A
+      space-before-numbering: false
+      key: atbl
+      latex-env: atbl
+      latex-list-of-description: Appendix Tables
+      caption-location: top
+
+author:
+    - name: "Fernando Rios-Avila"
+      affiliations:
+        - name: "Levy Economics Institute"
+          address: Annandale-on-Hudson, NY 12504
+    - name: "Aashima Sinha"
+      affiliations:
+        - name: "Levy Economics Institute"
+          address: Annandale-on-Hudson, NY 12504
+date: today
+keywords: "Mundlak approach, correlated random effects, panel data "
+
+bibliography:
+  - publications.bib
+  - biblio.bib
+  - references.bib
+---
+
+# abstract: 
+Correlated random effects (CRE) modelling approach has attained its due attention for both linear and non-linear models for panel data. In this tsudy we propose a simplified impelmentation procedure involving a one step  STATA code that applies the Mundalik 1978 approach to a range of models. We build on xxxx
+
+
+# Introduction
+Panel data estimation has seen multiple approaches to account for unobserved hetergoeneity. The classic[@Mundalak1978] paper opened doors to the correlated random effects model (CRE) which has gathered increasing attention since then [@Woolridgexx, cc].  [@Mundlak1978] proposed a technique that estimates random-effects regression models adding group-means of variables as covariates/independent variables which vary within groups. This technique offered a way to relax the assumption in the random-effects estimator that the observed variables are uncorrelated with the unobserved variables. Additionally, the degree of statistical significance of the estimated coefficients on the group means can be used to test whether such assumption holds for individual regressors [@Woolridg2010, @Greene2011]. 
+
+Correlated random effects (CRE) approaches to nonlinear panel data models are popular with empirical researchers, partly because of their simplicity but also because recent research [for example, Altonji and Matzkin (2005) and Wooldridge (2005)] shows that quantities of interest – usually called “average partial effects” (APEs) or “average marginal effects” (AMEs) – are identified under nonparametric restrictions on the distribution of heterogeneity given the covariate process. (Exchangeability is one such restriction, but it is not the only one.) Wooldridge (2010) shows how the CRE approach applies to commonly used models, such as unobserved effects probit, Tobit, and count models. Papke and Wooldridge (2008) propose simple CRE methods when the response variable is a fraction or proportion.
+
+The typical randon effects model is as follows:
+$$Y_{ij} = A + B1*X_{ij} + B2*Z_{i}+v_{ij}
+$$ {#eq-bal}
+
+The Mundlak model adds the group mean as follows:
+$$Y_{ij} = A + B1*X_{ij} + B2*Z_{i} + B3*Xi+v_{ij}
+$$ {#eq-bal}
+
+Panel data estimation has gained it's credibility in emprical work across diffeent dsicplines including economics [@Hsiao (1985, 2014); @Baltagi (2008)]. This is mainly because it allows us to model dynamic relationships by following the same units over time and helps account for systematic differences across units including individuals, firms, regions cities. Such analysis hodls importance in drawing causal inferneces.
+
+The fixed effects (FE) estimator, one of the most commonly used methods for analyzing panel data, accommodates time-constant unobservable component—often referred to as "unobserved heterogeneity"—that can be correlated with time-varying explanatory variables. This reflects one type of endogeneity. However, the standard FE estimator assumes that the covariates are strictly exogenous with respect to time-varying (idiosyncratic) errors. This same assumption applies to differencing methods, such as first differencing (FD), which is the most prevalent. While the FE and FD approaches address endogeneity stemming from unobserved heterogeneity, they do not tackle endogeneity caused by idiosyncratic errors. On the other hand, the random effects (RE) estimator presumes that the explanatory variables are uncorrelated with both the unobserved heterogeneity and the idiosyncratic errors for it to be consistent.
+
+The correlated random effects (CRE) approach offers a way to integrate the FE and RE methods. As established by Mundlak (1978), incorporating the time averages of the time-varying covariates yields FE estimates for these covariates. This indicates that the CRE approach allows for the unobserved heterogeneity to be arbitrarily correlated with the time-varying explanatory variables, but it assumes that explanatory variables are uncorrelated with time-varying innovations across different time periods.
+
+[@Woolridge2018]  proposes some strategies for unbalanced panels that can allow unobserved heterogeneity to be correlated with observed covariates and sample selection. The methods are extensions of the Chamberlain–Mundlak approach for balanced panels when explanatory variables are strictly exogenous conditional on unobserved effects. A robust Hausman tests for unbalanced panels helps test xxx.
+The framework suggests straightforward tests for sample selection that is correlated with unobserved shocks while allowing selection to be correlated with the observed covariates and unobserved heterogeneity.
+
+Moroever, [@Woolridge2018] argues that for nonlinear models, in many cases the estimators can be implemented using standard software. While calculating the group mean can involve several assumptions and specification in terms of xx xxx, in this paper we present a impelmentation simplfication for applying the Mundlak CRE approach to both linear an non-linear models using balanced and unbalanced panels.
+We develop a STATA code that absorbs individual variations and deconstruct the regression model that includes group means. The entire procedure can be implemented with a one-step code [described in detail below in Section on xx].
+
