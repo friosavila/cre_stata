@@ -35,7 +35,7 @@ bibliography:
 ---
 
 # abstract: 
-Correlated random effects (CRE) modelling approach has attained its due attention for both linear and non-linear models for panel data. In this tsudy we propose a simplified impelmentation procedure involving a one step  STATA code that applies the Mundalik 1978 approach to a range of models. We build on xxxx
+Correlated random effects (CRE) modelling approach has attained its due attention for both linear and non-linear models for panel data. In this study we propose a simplified impelmentation procedure involving a one step  STATA code that applies the Mundalik 1978 approach to a range of models. We build on xxxx
 
 
 # Introduction
