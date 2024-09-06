@@ -603,7 +603,7 @@ models, under the three scenarios. We use
 The results of the simulation are presented in Figure~\ref{fig-cre} and
 Table~\ref{tbl-cre}. The figure presents the densities of the estimated
 coefficients across all simulations, whereas the table provides a brief
-summary of the bias and mean absolute error of the estimated
+summary of the bias and mean absolute error (MAE) of the estimated
 coefficients.
 
 \begin{figure}[H]
@@ -622,9 +622,10 @@ for non-linear models}
 As expected, controlling for the unobserved effects, the unfeasible
 estimator provides what we would consider to be the benchmark/true
 estimates of coefficients/marginal effects given the sample and data
-generating process. For Table~\ref{tbl-cre}, we use the mean of the
-unfeasible estimator to represent the true point estimate and construct
-the bias and mean absolute error for the other estimators.
+generating process. For Table~\ref{tbl-cre}, we use the average
+coefficients/marginal effects of the unfeasible estimator to represent
+the true point estimate, and use those to construct the bias and mean
+absolute error for the other estimators.
 
 Because the individual effects are constructed to be correlated with the
 explanatory variables, the estimated coefficients are biased when they
