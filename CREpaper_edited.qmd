@@ -117,7 +117,7 @@ While the CRE approach has some advantages over FE and RE in linear models, incl
 
 Consider a data generating process for a non-linear model, where the latent linear index is given by: 
 
-$$y^*_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i \\
+$$y^*_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i
 $${#eq-nl-1}
 
 In this case, $y^*$ is the expected latent variable that depends on time varying and time invariant variables, as well as an individual-specific effect. The observed variable $y_{i,t}$ can then be generated as a random draw from a distribution that depends on $y^*_{i,t}$. For example: 
