@@ -1,0 +1,528 @@
+----------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  /Users/rijujoshi/Dropbox/Research/CRE/logfile.log
+  log type:  text
+ opened on:  18 Aug 2023, 16:01:17
+
+. use sch93_98_4th.dta
+
+. xtset schid year
+
+Panel variable: schid (strongly balanced)
+ Time variable: year, 1993 to 1998
+         Delta: 1 unit
+
+. set more off
+
+. *modify the data
+. drop if year <1995
+(3,286 observations deleted)
+
+. keep schid lunch math4 year y95 y96 y97 lenrol found y98 lfound avgrexpp lavgrexpp
+
+. mdesc
+
+    Variable    |     Missing          Total     Percent Missing
+----------------+-----------------------------------------------
+          schid |           0          6,572           0.00
+          lunch |           0          6,572           0.00
+          math4 |           0          6,572           0.00
+           year |           0          6,572           0.00
+            y95 |           0          6,572           0.00
+            y96 |           0          6,572           0.00
+            y97 |           0          6,572           0.00
+         lenrol |          92          6,572           1.40
+          found |           0          6,572           0.00
+            y98 |           0          6,572           0.00
+         lfound |           0          6,572           0.00
+       avgrexpp |         592          6,572           9.01
+      lavgrexpp |         617          6,572           9.39
+----------------+-----------------------------------------------
+
+. gen s = 1
+
+. replace s = 0 if avgrexpp == . | lenrol == . | lavgrexpp == .
+(659 real changes made)
+
+. *we get unbalanced data
+. bysort schid : gen s_lag = s[_n-1]
+(1,643 missing values generated)
+
+. *Nijman-Verbeek
+. xtivreg math4 lunch lenrol s_lag (lavgrexpp=lfound) y97 y98, fe
+
+Fixed-effects (within) IV regression            Number of obs     =      4,768
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  =      .                                         min =          1
+     Between = 0.0023                                         avg =        2.9
+     Overall = 0.0093                                         max =          3
+
+                                                Wald chi2(6)      =   91102.74
+corr(u_i, Xb) = -0.8577                         Prob > chi2       =     0.0000
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   224.5748   58.87992     3.81   0.000     109.1723    339.9774
+       lunch |  -.0950584   .0706374    -1.35   0.178    -.2335051    .0433883
+      lenrol |   42.15799   12.96577     3.25   0.001     16.74556    67.57042
+       s_lag |   1.027485   .9631659     1.07   0.286    -.8602858    2.915255
+         y97 |  -8.680151   1.543314    -5.62   0.000    -11.70499    -5.65531
+         y98 |   1.999477   2.159449     0.93   0.354    -2.232966    6.231919
+       _cons |  -2048.352   562.3007    -3.64   0.000    -3150.441   -946.2627
+-------------+----------------------------------------------------------------
+     sigma_u |  37.708789
+     sigma_e |  15.289824
+         rho |  .85880638   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+ F test that all u_i=0: F(1642,3119) =     2.10           Prob > F    = 0.0000
+------------------------------------------------------------------------------
+Endogenous: lavgrexpp
+Exogenous:  lunch lenrol s_lag y97 y98 lfound
+
+. *Unable to reject the hypothesis of "no sample selection"
+. drop if s ==  0
+(659 observations deleted)
+
+. xtdescribe
+
+   schid:  1, 2, ..., 7653                                   n =       1643
+    year:  1995, 1996, ..., 1998                             T =          4
+           Delta(year) = 1 unit
+           Span(year)  = 4 periods
+           (schid*year uniquely identifies each observation)
+
+Distribution of T_i:   min      5%     25%       50%       75%     95%     max
+                         1       2       3         4         4       4       4
+
+     Freq.  Percent    Cum. |  Pattern
+ ---------------------------+---------
+     1089     66.28   66.28 |  1111
+      420     25.56   91.84 |  .111
+       44      2.68   94.52 |  ..11
+       31      1.89   96.41 |  11.1
+       11      0.67   97.08 |  .1.1
+       11      0.67   97.75 |  11..
+       10      0.61   98.36 |  .11.
+        9      0.55   98.90 |  .1..
+        9      0.55   99.45 |  111.
+        9      0.55  100.00 | (other patterns)
+ ---------------------------+---------
+     1643    100.00         |  XXXX
+
+. xtset schid year
+
+Panel variable: schid (unbalanced)
+ Time variable: year, 1995 to 1998, but with gaps
+         Delta: 1 unit
+
+. *****GENERATING VARIABLES**************
+. *genrating time averages
+. egen alunch = mean(lunch), by(schid)
+
+. egen alenrol = mean(lenrol), by(schid)
+
+. egen alavgrexpp = mean(lavgrexpp), by(schid)
+
+. egen alfound = mean(lfound), by (schid)
+
+. egen ay95 = mean(y95), by(schid)
+
+. egen ay96 = mean(y96), by(schid)
+
+. egen ay97 = mean(y97), by(schid)
+
+. egen ay98= mean(y98), by(schid)
+
+. *generating full averages
+. egen mlunch = mean(lunch)
+
+. egen mlenrol = mean(lenrol)
+
+. egen mlavgrexpp = mean(lavgrexpp)
+
+. egen mlfound = mean(lfound)
+
+. egen my95  = mean(y95)
+
+. egen my96  = mean(y96)
+
+. egen my97 = mean(y97)
+
+. egen my98 = mean(y98)
+
+. *generating deviations of time averages from full averages
+. gen dalunch = alunch - mlunch
+
+. gen dalenrol = alenrol - mlenrol
+
+. gen dalfound = alfound - mlfound
+
+. gen day95 = ay95 - my95
+
+. gen day96 = ay96 - my96
+
+. gen day97 = ay97 - my97
+
+. gen day98 = ay98 - my98
+
+. 
+. **********REGRESSIONS****************
+. 
+. *deviation from full averages
+. global daverages dalunch dalenrol dalfound day96 day97 day98
+
+. 
+. **********Control Function****************
+. 
+. *Reduced Form
+. xtreg lavgrexpp lunch lenrol y96 y97 y98 lfound, fe 
+
+Fixed-effects (within) regression               Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.5244                                         min =          1
+     Between = 0.3515                                         avg =        3.6
+     Overall = 0.3920                                         max =          4
+
+                                                F(6, 4264)        =     783.69
+corr(u_i, Xb) = -0.1529                         Prob > F          =     0.0000
+
+------------------------------------------------------------------------------
+   lavgrexpp | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+       lunch |   .0006449   .0001833     3.52   0.000     .0002856    .0010042
+      lenrol |  -.2258806    .010469   -21.58   0.000    -.2464053   -.2053558
+         y96 |   .0854855   .0029197    29.28   0.000     .0797615    .0912096
+         y97 |   .0966235   .0043002    22.47   0.000     .0881927    .1050542
+         y98 |   .0936326   .0057945    16.16   0.000     .0822724    .1049928
+      lfound |   .4140243   .0546395     7.58   0.000     .3069024    .5211461
+       _cons |    5.95768   .4785065    12.45   0.000     5.019559    6.895802
+-------------+----------------------------------------------------------------
+     sigma_u |  .12456703
+     sigma_e |  .05731366
+         rho |  .82529034   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+F test that all u_i=0: F(1642, 4264) = 11.48                 Prob > F = 0.0000
+
+. predict residuals, e
+
+. *Control Function
+. xtreg math4 lavgrexpp lunch lenrol y96 y97 y98 residuals, fe cluster(schid)
+
+Fixed-effects (within) regression               Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2493                                         min =          1
+     Between = 0.0006                                         avg =        3.6
+     Overall = 0.0394                                         max =          4
+
+                                                F(7, 1642)        =     206.95
+corr(u_i, Xb) = -0.2849                         Prob > F          =     0.0000
+
+                              (Std. err. adjusted for 1,643 clusters in schid)
+------------------------------------------------------------------------------
+             |               Robust
+       math4 | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   46.99949   23.32391     2.02   0.044     1.251745    92.74723
+       lunch |  -.0046623   .0458379    -0.10   0.919    -.0945692    .0852447
+      lenrol |   6.482783   5.628709     1.15   0.250    -4.557421    17.52299
+         y96 |  -2.557626   2.366525    -1.08   0.280    -7.199351      2.0841
+         y97 |  -6.628854   2.983784    -2.22   0.026    -12.48128   -.7764313
+         y98 |   6.110501   3.235094     1.89   0.059     -.234844    12.45585
+   residuals |  -42.47945   23.52308    -1.81   0.071    -88.61785    3.658948
+       _cons |  -361.7711   222.1993    -1.63   0.104     -797.595    74.05284
+-------------+----------------------------------------------------------------
+     sigma_u |  17.477934
+     sigma_e |  11.134437
+         rho |   .7113178   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+
+. outreg2 using "$folder/Tex", ctitle( "CF" )replace 
+dir : seeout
+
+. *FE
+. xtreg math4 lavgrexpp lunch lenrol y96 y97 y98, fe
+
+Fixed-effects (within) regression               Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2488                                         min =          1
+     Between = 0.0187                                         avg =        3.6
+     Overall = 0.0523                                         max =          4
+
+                                                F(6, 4264)        =     235.36
+corr(u_i, Xb) = -0.0800                         Prob > F          =     0.0000
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   5.084444   2.955861     1.72   0.085     -.710582    10.87947
+       lunch |   .0201847    .035627     0.57   0.571    -.0496628    .0900321
+      lenrol |  -3.173946   2.142088    -1.48   0.138    -7.373554    1.025661
+         y96 |    1.59806   .5338872     2.99   0.003     .5513628    2.644756
+         y97 |  -1.426599   .5795013    -2.46   0.014    -2.562724   -.2904752
+         y98 |   11.72286   .5984913    19.59   0.000     10.54951    12.89622
+       _cons |   38.60968   30.75504     1.26   0.209    -21.68621    98.90556
+-------------+----------------------------------------------------------------
+     sigma_u |  16.558878
+     sigma_e |  11.136668
+         rho |  .68855204   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+F test that all u_i=0: F(1642, 4264) = 4.56                  Prob > F = 0.0000
+
+. outreg2 using "$folder/Tex", append ctitle( "FE" )
+dir : seeout
+
+. *RE
+. xtreg math4 lavgrexpp lunch lenrol y96 y97 y98, re theta
+
+Random-effects GLS regression                   Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2287                                         min =          1
+     Between = 0.4062                                         avg =        3.6
+     Overall = 0.3493                                         max =          4
+
+                                                Wald chi2(6)      =    2354.81
+corr(u_i, X) = 0 (assumed)                      Prob > chi2       =     0.0000
+
+------------------- theta --------------------
+  min      5%       median        95%      max
+0.2841   0.4131     0.5438     0.5438   0.5438
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   7.256155   1.723583     4.21   0.000     3.877994    10.63432
+       lunch |  -.3712531   .0117968   -31.47   0.000    -.3943744   -.3481319
+      lenrol |  -1.814257   .7349611    -2.47   0.014    -3.254754   -.3737597
+         y96 |   1.273799   .4760339     2.68   0.007     .3407893    2.206808
+         y97 |  -1.505879   .4972842    -3.03   0.002    -2.480538   -.5312199
+         y98 |   11.74036   .5063487    23.19   0.000     10.74793    12.73278
+       _cons |    26.9842   15.78968     1.71   0.087    -3.963001     57.9314
+-------------+----------------------------------------------------------------
+     sigma_u |  10.862656
+     sigma_e |  11.136668
+         rho |  .48754647   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+
+. outreg2 using "$folder/Tex", append ctitle( "RE" )
+dir : seeout
+
+. *RE2SLS
+. xtivreg math4 (lavgrexpp =lfound) lunch lenrol y96 y97 y98, re theta 
+
+G2SLS random-effects IV regression              Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2256                                         min =          1
+     Between = 0.3920                                         avg =        3.6
+     Overall = 0.3403                                         max =          4
+
+                                                Wald chi2(6)      =    2371.76
+corr(u_i, X) = 0 (assumed)                      Prob > chi2       =     0.0000
+
+------------------- theta --------------------
+  min      5%       median        95%      max
+0.2779   0.4838     0.5373     0.5373   0.5373
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   19.47323   2.989561     6.51   0.000      13.6138    25.33267
+       lunch |  -.3775585   .0117923   -32.02   0.000     -.400671   -.3544459
+      lenrol |  -.5231797   .7760485    -0.67   0.500    -2.044207    .9978474
+         y96 |   .0966068   .5337869     0.18   0.856    -.9495963     1.14281
+         y97 |  -3.024505   .5852367    -5.17   0.000    -4.171548   -1.877462
+         y98 |   10.05191   .6109239    16.45   0.000     8.854524     11.2493
+       _cons |  -80.65086    26.6922    -3.02   0.003    -132.9666   -28.33511
+-------------+----------------------------------------------------------------
+     sigma_u |   10.91706
+     sigma_e |  11.396234
+         rho |  .47853507   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+Endogenous: lavgrexpp
+Exogenous:  lunch lenrol y96 y97 y98 lfound
+
+. outreg2 using "$folder/Tex", append ctitle( "RE2SLS" )
+dir : seeout
+
+. *FE2SLS
+. xtivreg math4 (lavgrexpp = lfound) lunch lenrol y96 y97 y98, fe 
+
+Fixed-effects (within) IV regression            Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2134                                         min =          1
+     Between = 0.0006                                         avg =        3.6
+     Overall = 0.0379                                         max =          4
+
+                                                Wald chi2(6)      =  198741.54
+corr(u_i, Xb) = -0.2758                         Prob > chi2       =     0.0000
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   46.99949   26.24122     1.79   0.073    -4.432357    98.43134
+       lunch |  -.0046623   .0395967    -0.12   0.906    -.0822704    .0729459
+      lenrol |   6.482783   6.392916     1.01   0.311    -6.047103    19.01267
+         y96 |  -2.557626   2.641471    -0.97   0.333    -7.734814    2.619563
+         y97 |  -6.628854     3.2891    -2.02   0.044    -13.07537   -.1823359
+         y98 |   6.110501   3.543566     1.72   0.085      -.83476    13.05576
+       _cons |  -361.7711   250.9716    -1.44   0.149    -853.6664    130.1243
+-------------+----------------------------------------------------------------
+     sigma_u |  17.477934
+     sigma_e |  11.396234
+         rho |  .70168036   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+ F test that all u_i=0: F(1642,4264) =     4.36           Prob > F    = 0.0000
+------------------------------------------------------------------------------
+Endogenous: lavgrexpp
+Exogenous:  lunch lenrol y96 y97 y98 lfound
+
+. outreg2 using "$folder/Tex", append ctitle( "FE2SLS" )
+dir : seeout
+
+. *CRE-P2SLS
+. ivreg math4 (lavgrexpp = lfound) lunch lenrol y96 y97 y98 alunch alenrol alfound ay96 ay97 ay98, cluster(schid
+> )
+
+Instrumental variables 2SLS regression          Number of obs     =      5,913
+                                                F(12, 1642)       =     184.48
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2919
+                                                Root MSE          =      16.41
+
+                              (Std. err. adjusted for 1,643 clusters in schid)
+------------------------------------------------------------------------------
+             |               Robust
+       math4 | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   46.99821   25.03979     1.88   0.061    -2.115078     96.1115
+       lunch |  -.0046616   .0466998    -0.10   0.920    -.0962591    .0869359
+      lenrol |   6.482486   6.163623     1.05   0.293    -5.606905    18.57188
+         y96 |  -2.557499   2.534741    -1.01   0.313    -7.529164    2.414167
+         y97 |  -6.628695   3.187587    -2.08   0.038    -12.88086   -.3765295
+         y98 |   6.110673   3.447263     1.77   0.076    -.6508231    12.87217
+      alunch |  -.4524318   .0485187    -9.32   0.000    -.5475969   -.3572668
+     alenrol |  -4.341332   4.168884    -1.04   0.298    -12.51822    3.835558
+     alfound |  -19.94968   17.05907    -1.17   0.242    -53.40952    13.51015
+        ay96 |  -1.400263   4.761462    -0.29   0.769    -10.73944    7.938915
+        ay97 |   3.287994   4.692998     0.70   0.484    -5.916897    12.49289
+        ay98 |  -16.60946   4.937077    -3.36   0.001     -26.2931   -6.925834
+       _cons |  -142.1939   74.32728    -1.91   0.056    -287.9802    3.592356
+------------------------------------------------------------------------------
+Endogenous: lavgrexpp
+Exogenous:  lunch lenrol y96 y97 y98 alunch alenrol alfound ay96 ay97 ay98
+            lfound
+
+. outreg2 using "$folder\Tex", append ctitle( "CRE-P2SLS" )
+dir : seeout
+
+. *CRE-FE2SLS
+. xtivreg math4 (lavgrexpp = lfound) lunch lenrol y96 y97 y98 alunch alenrol alfound ay96 ay97 ay98, fe 
+
+Fixed-effects (within) IV regression            Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2134                                         min =          1
+     Between = 0.0006                                         avg =        3.6
+     Overall = 0.0379                                         max =          4
+
+                                                Wald chi2(6)      =  198741.54
+corr(u_i, Xb) = -0.2758                         Prob > chi2       =     0.0000
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   46.99949   26.24122     1.79   0.073    -4.432357    98.43134
+       lunch |  -.0046623   .0395967    -0.12   0.906    -.0822704    .0729459
+      lenrol |   6.482783   6.392916     1.01   0.311    -6.047103    19.01267
+         y96 |  -2.557626   2.641471    -0.97   0.333    -7.734814    2.619563
+         y97 |  -6.628854     3.2891    -2.02   0.044    -13.07537   -.1823359
+         y98 |   6.110501   3.543566     1.72   0.085      -.83476    13.05576
+      alunch |          0  (omitted)
+     alenrol |          0  (omitted)
+     alfound |          0  (omitted)
+        ay96 |          0  (omitted)
+        ay97 |          0  (omitted)
+        ay98 |          0  (omitted)
+       _cons |  -361.7711   250.9716    -1.44   0.149    -853.6664    130.1243
+-------------+----------------------------------------------------------------
+     sigma_u |  17.477934
+     sigma_e |  11.396234
+         rho |  .70168036   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+ F test that all u_i=0: F(1642,4264) =     4.21           Prob > F    = 0.0000
+------------------------------------------------------------------------------
+Endogenous: lavgrexpp
+Exogenous:  lunch lenrol y96 y97 y98 alunch alenrol alfound ay96 ay97 ay98
+            lfound
+
+. outreg2 using "$folder/Tex", append ctitle("CRE-FE2SLS")
+dir : seeout
+
+. *CRE-RE2SLS
+. xtivreg math4 (lavgrexpp = lfound) lunch lenrol y96 y97 y98 alunch alenrol alfound ay96 ay97 ay98, re theta 
+
+G2SLS random-effects IV regression              Number of obs     =      5,913
+Group variable: schid                           Number of groups  =      1,643
+
+R-squared:                                      Obs per group:
+     Within  = 0.2188                                         min =          1
+     Between = 0.3428                                         avg =        3.6
+     Overall = 0.3044                                         max =          4
+
+                                                Wald chi2(12)     =    2414.93
+corr(u_i, X) = 0 (assumed)                      Prob > chi2       =     0.0000
+
+------------------- theta --------------------
+  min      5%       median        95%      max
+0.2733   0.4788     0.5324     0.5324   0.5324
+
+------------------------------------------------------------------------------
+       math4 | Coefficient  Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+   lavgrexpp |   46.99921    26.7773     1.76   0.079    -5.483338    99.48176
+       lunch |  -.0046621   .0404059    -0.12   0.908    -.0838562    .0745319
+      lenrol |    6.48272   6.523523     0.99   0.320     -6.30315    19.26859
+         y96 |  -2.557598   2.695435    -0.95   0.343    -7.840553    2.725357
+         y97 |  -6.628819   3.356294    -1.98   0.048    -13.20703   -.0506044
+         y98 |   6.110538   3.615958     1.69   0.091    -.9766089    13.19769
+      alunch |  -.4548521   .0439081   -10.36   0.000    -.5409104   -.3687939
+     alenrol |  -4.516372   4.235745    -1.07   0.286    -12.81828    3.785537
+     alfound |  -20.39782   18.19201    -1.12   0.262     -56.0535    15.25786
+        ay96 |  -2.202292   4.504167    -0.49   0.625     -11.0303    6.625712
+        ay97 |   2.436439   4.588476     0.53   0.595    -6.556808    11.42969
+        ay98 |  -16.24052   4.775052    -3.40   0.001    -25.59945   -6.881594
+       _cons |  -136.8825   79.49054    -1.72   0.085    -292.6811    18.91607
+-------------+----------------------------------------------------------------
+     sigma_u |  10.780327
+     sigma_e |   11.40426
+         rho |  .47189761   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+Endogenous: lavgrexpp
+Exogenous:  lunch lenrol y96 y97 y98 alunch alenrol alfound ay96 ay97 ay98
+            lfound
+
+. outreg2 using "$folder/Tex", append ctitle("CRE-RE2SLS") tex 
+/Users/rijujoshi/Dropbox/Research/CRE/Tex.tex
+dir : seeout
+
+. log close
+      name:  <unnamed>
+       log:  /Users/rijujoshi/Dropbox/Research/CRE/logfile.log
+  log type:  text
+ closed on:  18 Aug 2023, 16:01:18
+----------------------------------------------------------------------------------------------------------------
