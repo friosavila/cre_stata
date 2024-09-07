@@ -90,19 +90,19 @@ end
  
 parallel initialize 15
 global seed 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-parallel sim , reps(1000) seeds($seed): cre_sim, model(1)
+parallel sim , reps(10000) seeds($seed): cre_sim, model(1)
 save cre_probit, replace
 
-parallel sim , reps(1000) seeds($seed): cre_sim, model(2)
+parallel sim , reps(10000) seeds($seed): cre_sim, model(2)
 save cre_fprobit, replace
 
-parallel sim , reps(1000) seeds($seed): cre_sim, model(3)
+parallel sim , reps(10000) seeds($seed): cre_sim, model(3)
 save cre_tobit, replace
 
-parallel sim , reps(1000) seeds($seed): cre_sim, model(4)
+parallel sim , reps(10000) seeds($seed): cre_sim, model(4)
 save cre_poisson, replace
 
-parallel sim , reps(1000) seeds($seed): cre_sim, model(5)
+parallel sim , reps(10000) seeds($seed): cre_sim, model(5)
 save cre_poisson2, replace
 
 use cre_probit, clear
@@ -167,4 +167,4 @@ graph export fig1.png, replace width(1000)
 
 
 esttab m1 m2 m3 m4 using table1.txt, cell(mean(fmt(3))) nonum mtitle(Probit FProbit Tobit Poisson) collab(none) ///
-	varlabel(ctrue_b_x1 "True:Bias" c2true_b_x1 "True:MAE" cnofe_b_x1 "Pool:Bias" c2nofe_b_x1 "Pool:MAE" ccre_b_x1 "CRE:Bias"c2cre_b_x1 "CRE:MAE") md
+	varlabel(ctrue_b_x1 "True:Bias" c2true_b_x1 "True:MAE" cnofe_b_x1 "Pool:Bias" c2nofe_b_x1 "Pool:MAE" ccre_b_x1 "CRE:Bias"c2cre_b_x1 "CRE:MAE") md replace
