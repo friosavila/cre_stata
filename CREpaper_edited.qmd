@@ -193,7 +193,18 @@ gen y_tobit = max( y_star + rnormal(),0)
 gen y_poisson = rpoisson(exp(y_star))
 ```
 
-We then estimate the models under three assumptions: one where the fixed effects are observed including `c1` and `c2` in the specification (benchmark), one where they are not considered, and one where we use the CRE approach using the `cre` command. This exercise is repeated 1000 times, and the results are compared in terms of the distributions of the marginal effects for the probit and fractional probit model, and coefficients for the tobit and poisson models, under the three scenarios. We use `parallel`[@vegayon2019] to speed up the process. 
+We then estimate the models under three assumptions: one where the fixed effects are observed including `c1` and `c2` in the specification (benchmark), one where they are not considered, and one where we use the CRE approach using the `cre` command. Using the probit model as an example, the estimation process is as follows:
+
+```
+// True model / unfeasible estimator
+probit y_probit x1 x2 c1 c2
+// Pooled data estimator
+probit y_probit x1 x2
+// CRE estimator
+cre, abs(id1 id2): probit y_probit x1 x2 
+```
+
+This exercise is repeated 1000 times, and the results are compared in terms of the distributions of the marginal effects for the probit and fractional probit model, and coefficients for the tobit and poisson models, under the three scenarios. We use `parallel`[@vegayon2019] to speed up the process. 
 
 The results of the simulation are presented in @fig-cre and @tbl-cre. The figure presents the densities of the estimated coefficients across all simulations, whereas the table provides a brief summary of the bias and mean absolute error (MAE) of the estimated coefficients. 
 

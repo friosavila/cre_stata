@@ -127,9 +127,11 @@
 
 \inserttype[st0001]{article}
 \author{}{
-Fernando Rios-Avila\\
-Levy Economics Institute of Bard College\\Annandale-on-Hudson, NY
-12504\\
+Fernando Rios-Avila
+\\
+Levy Economics Institute of Bard College\\
+Annandale-on-Hudson, NY 12504
+\\
 \href{mailto:friosavi@levy.org}{friosavi@levy.org}
 }
  
@@ -593,9 +595,20 @@ gen y_poisson = rpoisson(exp(y_star))
 We then estimate the models under three assumptions: one where the fixed
 effects are observed including \texttt{c1} and \texttt{c2} in the
 specification (benchmark), one where they are not considered, and one
-where we use the CRE approach using the \texttt{cre} command. This
-exercise is repeated 1000 times, and the results are compared in terms
-of the distributions of the marginal effects for the probit and
+where we use the CRE approach using the \texttt{cre} command. Using the
+probit model as an example, the estimation process is as follows:
+
+\begin{verbatim}
+// True model / unfeasible estimator
+probit y_probit x1 x2 c1 c2
+// Pooled data estimator
+probit y_probit x1 x2
+// CRE estimator
+cre, abs(id1 id2): probit y_probit x1 x2 
+\end{verbatim}
+
+This exercise is repeated 1000 times, and the results are compared in
+terms of the distributions of the marginal effects for the probit and
 fractional probit model, and coefficients for the tobit and poisson
 models, under the three scenarios. We use
 \texttt{parallel}\citep{vegayon2019} to speed up the process.
