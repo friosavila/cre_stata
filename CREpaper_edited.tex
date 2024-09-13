@@ -391,12 +391,14 @@ model:
 }\end{equation}
 
 Notice that we assume the constant to be zero, given the zero mean
-assumption. \(\check x_{i}\) and \(\check x_{t}\) in this model can be
-estimated using an iterative demeaning, as long as the sample used is
-the same one as in the original model (Equation~\ref{eq-mcre-1}). In
-addition, one should only concentrate on variables that show variation
-in both dimensions. Once these are estimated, the final model can be
-estimated using Equation~\ref{eq-mcre-final}.
+assumption of all explanatory variables. \(\check x_{i}\) and
+\(\check x_{t}\) in this model can be estimated using dummies for every
+individual and time period, respectively, or using an iterative
+demeaning process, as long as the sample used is the same one as in the
+main model (Equation~\ref{eq-mcre-1}). In addition, one should only
+concentrate on variables that show variation in both dimensions. Once
+these are estimated, the final model can be estimated using
+Equation~\ref{eq-mcre-final}.
 
 Extending this analogy to three or more dimensions is straightforward.
 One simply requires to:
@@ -480,6 +482,45 @@ as discussed in the previous section. Furthermore, as discussed in
 \citet{wooldridge2019}, one can consider even more flexible
 specifications by allowing for interactions between the group-specific
 means and other variables in the model, including time dummy variables.
+
+\subsection{Standard Errors and Hypothesis
+Testing}\label{standard-errors-and-hypothesis-testing}
+
+There is not much information available for the correct approach
+estimating Standard Errors for CRE models. Because the model is based on
+a two-step estimation process, we know that standard errors would not be
+consistent, due to the additional uncertainty introduced by the
+inclusion of pre-estimated parameters.
+
+Furthermore, in contrast with the demeaning procedure behind the fixed
+effects estimator in linear models, the influence functions of the
+estimated coefficients change when the group means are included. Because
+of this, it is not possible to recover asymptotic or robust standard
+errors even if the point estimates of time varying coefficients are the
+same.
+
+According to \citet{wooldridge2010econometric}, one alternative is to
+report clustered standard errors, using the same dimension as the group
+means. In panel data, this is to either cluster at the individual level,
+or use a random effects estimator, with the corresponding standard
+errors. This produces the same standard errors as the fixed effects
+estimator for the coefficients of time varying covariates. This can be
+easily extended to non-linear models.
+
+For models with multiple fixed effects, the estimation of standard
+errors is less clear. On the one hand, if one uses multi-way clustered
+standard errors, the standard errors of the standard demeaning/FE
+estimator and the CRE estimator will be the same, except for differences
+in the degrees of freedom. This, however, may not be desirable if one is
+not interested in multiway clustering. This is common in panel data
+models, where one wants to control for individual and time fixed
+effects, but only wants to cluster at the individual level. In such
+cases, it may be advisable to use resampling methods, like
+bootstrapping, to provide more reliable standard errors. In this case
+\citet{wooldridge2010econometric} suggests bootstrapping the whole
+process, including the estimation of the group means.\footnote{For the
+  propose method, this would involve using \texttt{bootstrap} before
+  \texttt{cre,\ abs()}, for any estimation.}
 
 \section{\texorpdfstring{\texttt{cre} Command: Implementation in
 Stata}{cre Command: Implementation in Stata}}\label{sec-3}
@@ -607,7 +648,7 @@ probit y_probit x1 x2
 cre, abs(id1 id2): probit y_probit x1 x2 
 \end{verbatim}
 
-This exercise is repeated 1000 times, and the results are compared in
+This exercise is repeated 10000 times, and the results are compared in
 terms of the distributions of the marginal effects for the probit and
 fractional probit model, and coefficients for the tobit and poisson
 models, under the three scenarios. We use
@@ -724,9 +765,9 @@ not appropriate.
 
 \section{Acknowledgments}\label{acknowledgments}
 
-Thanks to Aashima Sinha for her help in the preparation and comments for
-this paper, and Enrique Pinzon for his encouragement on pushing this
-project forward.
+Thanks to Aashima Sinha for her help in the preparation and providing
+feedback for this paper, and Enrique Pinzon for his encouragement on
+pushing this project forward.
 
 \clearpage
 
