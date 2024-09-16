@@ -1,8 +1,8 @@
 Dear Editors of the Stata Journal,
 
-I would like submit my manuscript titled "Simplifying the Estimation of Correlated Random Effects Models" for consideration for publication in the Stata Journal. This paper introduces the `cre` command, a tool that aims to simply the implementation of Correlated Random Effects (CRE) models across a wide range of linear and non-linear estimators.
+I would like submit my manuscript titled "Simplifying the Estimation of Correlated Random Effects Models" for consideration for publication in the Stata Journal. This paper introduces the `cre` command, a tool that aims to simplify the implementation of Correlated Random Effects (CRE) models across a wide range of linear and non-linear estimators.
 
-The CRE approach offers a middle ground between fixed effects and random effects models, addressing some of their limitations. However, while CRE models have been discussed in the econometric literature, their practical implementation has been limited due to the lack of readily available tools. The `cre` command aims to fill this gap by providing a user-friendly and flexible solution for Stata users.
+The CRE approach offers a middle ground between fixed effects and random effects models, addressing some of their limitations. While the implementation of such type of models is easy, I believe the `cre` would further simplify the task, providing a user-friendly and flexible solution for Stata users.
 
 I believe this paper and the accompanying `cre` command will be of significant interest to Stata Journal readers, particularly those working with panel data or nested data structures.
 
