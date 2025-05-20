@@ -30,97 +30,101 @@ cite-method: natbib
 
 # Introduction
 
-Panel data analysis has become increasingly important in empirical research in economics and social sciences, allowing researchers to control for unobserved individual heterogeneity that is believed to be fixed across time. The two main approaches that have been used to model relationships using this type of data have been fixed effects (FE) and random effects (RE) models. Each one of them, however, comes with limitations. On the one hand, while fixed effects models can be used to provide consistent estimates, while controlling for time-invariant unobserved factors, they cannot be used to estimate the effects of time-invariant variables, which may be relevant for some research questions. On the other hand, while random effects models allow you to identify effects of time-invariant variables, the estimation relies on the strong assumption that individual-specific effects are uncorrelated with other explanatory variables in the model, which is often violated in practice [@wooldridge2019]. 
+Panel data analysis has become increasingly important in empirical research in economics and social sciences, allowing researchers to control for unobserved individual heterogeneity that is believed to be fixed across time. The two main approaches that have been used to model relationships using this type of data have been fixed effects (FE) and random effects (RE) models. Each one of them, however, comes with limitations. On the one hand, while fixed effects models can be used to provide consistent estimates, while controlling for time-invariant unobserved factors, they cannot be used to estimate the effects of time-invariant variables, which may be relevant for some research questions. On the other hand, while random effects models allow you to identify effects of time-invariant variables, the estimation relies on the strong assumption that individual-specific effects are uncorrelated with other explanatory variables in the model, which is often violated in practice [@wooldridge2019].
 
-While less commonly used, there is a third option that shares some of the strengths of both FE and RE models: Correlated Random Effects (CRE) models. First introduced by @mundlak1978pooling and further developed by @chamberlain1982multivariate, CRE proposes a middle ground approach to address the limitations of RE models by explicitly allowing for correlation between the individual-specific effects and the time-varying explanatory variables. By doing so, CRE can estimate the effects of time-invariant variables while also providing consistent estimates for time-variant coefficients that are identical to the FE estimator in linear models. Despite these advantages, CRE models have seen limited use in applied research, partly due to the lack of readily available software implementations. ^[StataNow released an option for the estimation of CRE models as part of the panel data estimators on June 25, 2024. There are also the community-contributed commands `xthybrid`[@schunck2017] and `mundlak`[@perales2013]] 
+While less commonly used, there is a third option that shares some of the strengths of both FE and RE models: Correlated Random Effects (CRE) models. First introduced by @mundlak1978pooling and further developed by @chamberlain1982multivariate, CRE proposes a middle ground approach to address the limitations of RE models by explicitly allowing for correlation between the individual-specific effects and the time-varying explanatory variables. By doing so, CRE can estimate the effects of time-invariant variables while also providing consistent estimates for time-variant coefficients that are identical to the FE estimator in linear models. Despite these advantages, CRE models have seen limited use in applied research, partly due to the lack of readily available software implementations. \^\[StataNow released an option for the estimation of CRE models as part of the panel data estimators on June 25, 2024. There are also the community-contributed commands `xthybrid`[@schunck2017] and `mundlak`[@perales2013].
 
-This paper introduces the `cre` command for Stata, which aims to provide a straightforward and flexible tool for estimating CRE models for linear and non-linear models, supporting both balanced and unbalanced panels, as well as multiple fixed effects. This command is a prefix-type command that identifies all explanatory variables in a model, calculates the group means (or mean-like statistics) for each variable, and adds them to the model to provide a @mundlak1978pooling type estimator. Because of this, there are few restrictions on the type of models that can be estimated using this command, making it a versatile tool for applied researchers. Furthermore, because it integrates seamlessly with Stata's existing estimation commands, all post-estimation commands and diagnostics can be used. 
+This paper introduces the `cre` command for Stata, which aims to provide a straightforward and flexible tool for estimating CRE models for linear and non-linear models, supporting both balanced and unbalanced panels, as well as multiple fixed effects. This command is a prefix-type command that identifies all explanatory variables in a model, calculates the group means (or mean-like statistics) for each variable, and adds them to the model to provide a @mundlak1978pooling type estimator. Because of this, there are few restrictions on the type of models that can be estimated using this command, making it a versatile tool for applied researchers. Furthermore, because it integrates seamlessly with Stata's existing estimation commands, all post-estimation commands and diagnostics can be used.
 
-We begin in @sec-2 reviewing the theoretical foundations of CRE models and their relationship to FE and RE models, extending our discussion to Multiple fixed effects, and application with non-linear models. @sec-3 presents the implementation of CRE estimation in Stata, describing the syntax of the command. Finally, @sec-4 presents a small Monte Carlo simulation to assess the performance of the CRE approach. @sec-5 concludes. 
+We begin in @sec-2 reviewing the theoretical foundations of CRE models and their relationship to FE and RE models, extending our discussion to Multiple fixed effects, and application with non-linear models. @sec-3 presents the implementation of CRE estimation in Stata, describing the syntax of the command. Finally, @sec-4 presents a small Monte Carlo simulation to assess the performance of the CRE approach. @sec-5 concludes.
 
 # Theoretical Framework {#sec-2}
 
 ## Correlated Random Effects Models - 1 Dimension
 
-The Correlated Random Effects (CRE) is an alternative estimation approach for panel data models that was first introduced by @mundlak1978pooling and further developed by @chamberlain1982multivariate. In contrast with standard Fixed Effects estimator, CRE allows users to control and identify the effects of time-variant and time-invariant variables. And, in contrast with standard random effects estimator, CRE lifts the assumption that individual-specific effects are uncorrelated with other explanatory variables in the model. As pointed out in @wooldridge2010econometric, for the case of linear models, the CRE point estimates are identical to the Fixed Effects estimator. 
+The Correlated Random Effects (CRE) is an alternative estimation approach for panel data models that was first introduced by @mundlak1978pooling and further developed by @chamberlain1982multivariate. In contrast with standard Fixed Effects estimator, CRE allows users to control and identify the effects of time-variant and time-invariant variables. And, in contrast with standard random effects estimator, CRE lifts the assumption that individual-specific effects are uncorrelated with other explanatory variables in the model. As pointed out in @wooldridge2010econometric, for the case of linear models, the CRE point estimates are identical to the Fixed Effects estimator.
 
-To understand how CRE models work, let's consider the following data generating process: 
+To understand how CRE models work, let's consider the following data generating process:
 
 $$y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z  + \alpha_i + u_{i,t}
-$${#eq-cre-1}
+$$ {#eq-cre-1}
 
-where $y_{i,t}$ is the dependent variable for individual $i$ at time $t$, $x_{i,t}$ is a vector of time-varying explanatory variables, $z_i$ a set of time-invariant factors, $\alpha_i$ is the individual-specific effect, and $u_{i,t}$ is the idiosyncratic error term.  
+where $y_{i,t}$ is the dependent variable for individual $i$ at time $t$, $x_{i,t}$ is a vector of time-varying explanatory variables, $z_i$ a set of time-invariant factors, $\alpha_i$ is the individual-specific effect, and $u_{i,t}$ is the idiosyncratic error term.
 
-Under the assumption that $\alpha_i$ is uncorrelated with $x_{i,t}$, in addition to the standard assumption of exogeneity of $u_{it}$, @eq-cre-1 could be consistently estimated using ordinary least squares (OLS), Random effects estimator, or fixed effects estimator.  
+Under the assumption that $\alpha_i$ is uncorrelated with $x_{i,t}$, in addition to the standard assumption of exogeneity of $u_{it}$, @eq-cre-1 could be consistently estimated using ordinary least squares (OLS), Random effects estimator, or fixed effects estimator.
 
-In the case of using OLS, standard errors would need to be adjusted to account for the fact that $\alpha_i$ is an effect that is clustered within individuals. In the case of Fixed effects, if the panel data is balanced, one could simply demean all the variables with group individual means and estimate the model with the transformed data. This demeaning process would eliminate the individual-specific effect $\alpha_i$ from the model, but would also make it impossible to estimate the effects of time-invariant variables. In the case of random effects, one could quasi-demean the data, before estimating the model. This transformation eliminates the within-individual autocorrelation, allowing for the estimation of coefficients of time-invariant variables. However, this approach is not consistent if the assumption that $\alpha_i$ is uncorrelated with $x_{i,t}$ is violated. 
+In the case of using OLS, standard errors would need to be adjusted to account for the fact that $\alpha_i$ is an effect that is clustered within individuals. In the case of Fixed effects, if the panel data is balanced, one could simply demean all the variables with group individual means and estimate the model with the transformed data. This demeaning process would eliminate the individual-specific effect $\alpha_i$ from the model, but would also make it impossible to estimate the effects of time-invariant variables. In the case of random effects, one could quasi-demean the data, before estimating the model. This transformation eliminates the within-individual autocorrelation, allowing for the estimation of coefficients of time-invariant variables. However, this approach is not consistent if the assumption that $\alpha_i$ is uncorrelated with $x_{i,t}$ is violated.[@albarran2019]
 
-The solution proposed by @mundlak1978pooling and @chamberlain1982multivariate was to explicitly allow for correlation between the individual-specific effects and the time-varying explanatory variables, by assuming that the individual-specific effect can be expressed as a projection of (mean) time-varying variables plus an uncorrelated disturbance. Specifically: 
+The solution proposed by @mundlak1978pooling and @chamberlain1982multivariate was to explicitly allow for correlation between the individual-specific effects and the time-varying explanatory variables, by assuming that the individual-specific effect can be expressed as a projection of (mean) time-varying variables plus an uncorrelated disturbance. Specifically:
 
 $$\begin{aligned}
 Mundlak:  & & \alpha_i &= \gamma_0 + \bar x_{i}\gamma + v_i &  \\
 Chamberlain: & & \alpha_i &= \gamma_0 + x_{i,1}\gamma_1 + x_{i,2}\gamma_2 + \dots + x_{i,T}\gamma_T + v_i 
 \end{aligned}
-$${#eq-cre-2}
+$$ {#eq-cre-2}
 
-where $\bar x_{i}$ is the individual specific mean of the time-varying variables, $x_{i,t}$ is the realization of $x$ for individual $i$ at time $t$, and $v_i$ is an uncorrelated disturbance. The main difference between both approaches was that @chamberlain1982multivariate allowed for a more flexible specification of the correlation between the individual-specific effect and the time-varying variables. @mundlak1978pooling, on the other hand, assumed that the correlation was constant, only depending on the individual average. If we substitute @eq-cre-2 into @eq-cre-1, the final model can be written as:  
+where $\bar x_{i}$ is the individual specific mean of the time-varying variables, $x_{i,t}$ is the realization of $x$ for individual $i$ at time $t$, and $v_i$ is an uncorrelated disturbance. The main difference between both approaches was that @chamberlain1982multivariate allowed for a more flexible specification of the correlation between the individual-specific effect and the time-varying variables. @mundlak1978pooling, on the other hand, assumed that the correlation was constant, only depending on the individual average. If we substitute @eq-cre-2 into @eq-cre-1, the final model can be written as:
 
 $$y_{i,t} = \beta_0 +x_{i,t}\beta_x + z_{i}\beta_z + \gamma_0 + f(x_{i,t})\Gamma + v_i + u_{i,t}
-$${#eq-cre-final}
+$$ {#eq-cre-final}
 
-where $f(x_{i,t})$ can be the full set of time-varying variables or just the average of them. Notice that in this specification, $\beta_0$ and $\gamma_0$ cannot be independently identified, and that the new model now has a compound error $v_i + u_{i,t}=\mu_{i,t}$, which is uncorrelated with $x_{i,t}$ by construction.  
+where $f(x_{i,t})$ can be the full set of time-varying variables or just the average of them. Notice that in this specification, $\beta_0$ and $\gamma_0$ cannot be independently identified, and that the new model now has a compound error $v_i + u_{i,t}=\mu_{i,t}$, which is uncorrelated with $x_{i,t}$ by construction.
 
-While this model could now be estimated using OLS, to account for the within-individual correlation driven by $v_i$, the model should be estimated using either random effects estimator, or clustering standard errors at the individual level (see @wooldridge2010econometric for a discussion). Interestingly, both methods provide the same results for time-varying covariates if the panel data is balanced, and all covariates are strictly exogenous.^[For time-invariant covariates, the RE estimator will be identical to @chamberlain1982multivariate approach only] However, this identity breaks down in other cases (see @abrevaya2013).  
+While this model could now be estimated using OLS, to account for the within-individual correlation driven by $v_i$, the model should be estimated using either random effects estimator, or clustering standard errors at the individual level (see @wooldridge2010econometric for a discussion). Interestingly, both methods provide the same results for time-varying covariates if the panel data is balanced, and all covariates are strictly exogenous.[^1] However, this identity breaks down in other cases (see @abrevaya2013).
 
-While both approaches will produce consistent estimates for the time-varying covariates, the implementation of @chamberlain1982multivariate is more difficult when the panel data is unbalanced (see @abrevaya2013). On the other hand, @mundlak1978pooling approach is easier to implement with unbalanced panels, because it only requires the calculation of the individual means for the observed data for each individual, as it has been shown by @wooldridge2019. Furthermore, @mundlak1978pooling only requires adding a few covariates to the model regardless of the number of periods in the panel, compared to an increasing number of covariates in @chamberlain1982multivariate approach. 
+[^1]: For time-invariant covariates, the RE estimator will be identical to @chamberlain1982multivariate approach only
+
+While both approaches will produce consistent estimates for the time-varying covariates, the implementation of @chamberlain1982multivariate is more difficult when the panel data is unbalanced (see @abrevaya2013). On the other hand, @mundlak1978pooling approach is easier to implement with unbalanced panels, because it only requires the calculation of the individual means for the observed data for each individual, as it has been shown by @wooldridge2019. Furthermore, @mundlak1978pooling only requires adding a few covariates to the model regardless of the number of periods in the panel, compared to an increasing number of covariates in @chamberlain1982multivariate approach.
 
 ## Correlated Random Effects Models - Multiple Dimensions
 
-One potential advantage of CRE-Mundlak estimation that has been less discussed in the literature is that it can be easily extended to accommodate for multiple fixed effects/dimensions. In the standard case of panel data, for example, one may be interested in controlling for both individual and time fixed effects. Among the few papers discussing this extension, @baltagi2023 focuses on formalizing the equivalence with two-way fixed effect estimation, while @wooldridge2021 have discussed the advantages of CRE-Mundlak estimation for the identification of treatment effects in setups of staggered adoption of treatments. Both authors discuss the CRE-Mundlak approach in the context of two fixed effects, however, the extension to more than two fixed effects is straightforward. 
+One potential advantage of CRE-Mundlak estimation that has been less discussed in the literature is that it can be easily extended to accommodate for multiple fixed effects/dimensions. In the standard case of panel data, for example, one may be interested in controlling for both individual and time fixed effects. Among the few papers discussing this extension, @baltagi2023 focuses on formalizing the equivalence with two-way fixed effect estimation, while @wooldridge2021 have discussed the advantages of CRE-Mundlak estimation for the identification of treatment effects in setups of staggered adoption of treatments. Both authors discuss the CRE-Mundlak approach in the context of two fixed effects, however, the extension to more than two fixed effects is straightforward.
 
-Consider the following data generating process: 
+Consider the following data generating process:
 
 $$y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + w_{t}\beta_w + \alpha_i + \tau_t + u_{i,t}
-$${#eq-mcre-1}
+$$ {#eq-mcre-1}
 
-In addition to the components from @eq-cre-1, @eq-mcre-1 also considers individual-invariant variables $w_{t}$, as well as effects that only vary across time, but not individuals $\tau_t$. As before, pool OLS or random effects estimators are only consistent if the individual-specific ($\alpha_i$) and time-specific ($\tau_i$) effects are uncorrelated with the explanatory variables. Without loss of generality let's assume that all variables have an overall mean of zero.  
+In addition to the components from @eq-cre-1, @eq-mcre-1 also considers individual-invariant variables $w_{t}$, as well as effects that only vary across time, but not individuals $\tau_t$. As before, pool OLS or random effects estimators are only consistent if the individual-specific ($\alpha_i$) and time-specific ($\tau_i$) effects are uncorrelated with the explanatory variables. Without loss of generality let's assume that all variables have an overall mean of zero.
 
-Extending the analogy from @eq-cre-2, we can project the sum of individual-specific and time-specific effect as a function of the individual and time averages of $X's$. Other variables are not included because they already are invariant in one of the dimensions: 
+Extending the analogy from @eq-cre-2, we can project the sum of individual-specific and time-specific effect as a function of the individual and time averages of $X's$. Other variables are not included because they already are invariant in one of the dimensions:
 
 $$
 \alpha_i + \alpha_t  = \gamma_0 + \check x_{i}\gamma + \check x_{t}\delta + v_{i,t}
-$${#eq-mcre-2}
+$$ {#eq-mcre-2}
 
-Interestingly, if the panel data is balanced, $\check x_{i}$ and $\check x_{t}$ can be estimated simply as the individual or period specific average. Furthermore, they would be orthogonal and @eq-mcre-2 could be expressed using two equations like @eq-cre-2, one for each dimension. In either case, the final model would be: 
+Interestingly, if the panel data is balanced, $\check x_{i}$ and $\check x_{t}$ can be estimated simply as the individual or period specific average. Furthermore, they would be orthogonal and @eq-mcre-2 could be expressed using two equations like @eq-cre-2, one for each dimension. In either case, the final model would be:
 
 $$y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + w_{t}\beta_w + \gamma_0 + \check x_{i}\gamma + \check x_{t}\delta+ v_{i,t} + u_{i,t}
-$${#eq-mcre-final}
+$$ {#eq-mcre-final}
 
-where $v_{i,t}$ is the compound error term ($v_{i}+v_{t}$) that is uncorrelated with $x_{i,t}$, which could be estimated using OLS. However, balanced panel data is not the norm.  
+where $v_{i,t}$ is the compound error term ($v_{i}+v_{t}$) that is uncorrelated with $x_{i,t}$, which could be estimated using OLS. However, balanced panel data is not the norm.
 
-When the panel data is unbalanced, $\check x_{i}$ and $\check x_{t}$ cannot be estimated as simple group averages. This is similar to the problem of using the within transformation for the estimation of M-way fixed effects [@rios2015; @correia_2016].^[As described in @rios2015, it is possible to implement a within-transformation using an iterative demeaning process until convergence. More recently, StataNow 18.5 also released a command that allows for the estimation of M-way fixed effects using a similar (yet more efficient) approach.] In this case, instead of estimating $\check x$ as individual or group averages, one should estimate them as the solution to the following model: 
+When the panel data is unbalanced, $\check x_{i}$ and $\check x_{t}$ cannot be estimated as simple group averages. This is similar to the problem of using the within transformation for the estimation of M-way fixed effects [@rios2015; @correia_2016].[^2] In this case, instead of estimating $\check x$ as individual or group averages, one should estimate them as the solution to the following model:
+
+[^2]: As described in @rios2015, it is possible to implement a within-transformation using an iterative demeaning process until convergence. More recently, StataNow 18.5 also released a command that allows for the estimation of M-way fixed effects using a similar (yet more efficient) approach.
 
 $$x_{i,t} = \check x_{i} + \check x_{t} + \epsilon_{i,t}
-$${#eq-mcre-3}
+$$ {#eq-mcre-3}
 
-Notice that we assume the constant to be zero, given the zero mean assumption of all explanatory variables. $\check x_{i}$ and $\check x_{t}$ in this model can be estimated using dummies for every individual and time period, respectively, or using an iterative demeaning process, as long as the sample used is the same one as in the main model (@eq-mcre-1). In addition, one should only concentrate on variables that show variation in both dimensions. Once these are estimated, the final model can be estimated using @eq-mcre-final.  
+Notice that we assume the constant to be zero, given the zero mean assumption of all explanatory variables. $\check x_{i}$ and $\check x_{t}$ in this model can be estimated using dummies for every individual and time period, respectively, or using an iterative demeaning process, as long as the sample used is the same one as in the main model (@eq-mcre-1). In addition, one should only concentrate on variables that show variation in both dimensions. Once these are estimated, the final model can be estimated using @eq-mcre-final.
 
-Extending this analogy to three or more dimensions is straightforward. One simply requires to: 
+Extending this analogy to three or more dimensions is straightforward. One simply requires to:
 
-1. Define the sample that is common to all dimensions.
-2. Estimate the group pseudo-averages for each dimension, and for all variables that show variation in all dimensions.
-3. Include the new variables in the main model, and estimate that model using OLS. 
+1.  Define the sample that is common to all dimensions.
+2.  Estimate the group pseudo-averages for each dimension, and for all variables that show variation in all dimensions.
+3.  Include the new variables in the main model, and estimate that model using OLS.
 
-## Nonlinear Models and CRE 
+## Nonlinear Models and CRE
 
-While the CRE approach has some advantages over FE and RE in linear models, including the option for a robust test to choose between RE and FE models, unless one is interested in the effects of time-invariant variables, the incentives to use CRE over FE are minimal in the framework of linear models. However, as discussed in @wooldridge2019 and @wooldridge2023, CRE can be particularly important to provide an alternative to fixed effect estimation in non-linear models, where the simple inclusion of dummies is not possible due to the incidental parameter problem, and a fixed effect estimator is not available. In fact, @wooldridge2010econometric shows that the CRE approach applies to commonly used models, such as probit, tobit, and count models, among others. 
+While the CRE approach has some advantages over FE and RE in linear models, including the option for a robust test to choose between RE and FE models, unless one is interested in the effects of time-invariant variables, the incentives to use CRE over FE are minimal in the framework of linear models. However, as discussed in @wooldridge2019 and @wooldridge2023, CRE can be particularly important to provide an alternative to fixed effect estimation in non-linear models, where the simple inclusion of dummies is not possible due to the incidental parameter problem, and a fixed effect estimator is not available. In fact, @wooldridge2010econometric shows that the CRE approach applies to commonly used models, such as probit, tobit, and count models, among others.
 
-Consider a data generating process for a non-linear model, where the latent linear index is given by: 
+Consider a data generating process for a non-linear model, where the latent linear index is given by:
 
 $$y^*_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i
-$${#eq-nl-1}
+$$ {#eq-nl-1}
 
-In this case, $y^*$ is the expected latent variable that depends on time varying and time invariant variables, as well as an individual-specific effect. The observed variable $y_{i,t}$ can then be generated as a random draw from a distribution that depends on $y^*_{i,t}$. For example: 
+In this case, $y^*$ is the expected latent variable that depends on time varying and time invariant variables, as well as an individual-specific effect. The observed variable $y_{i,t}$ can then be generated as a random draw from a distribution that depends on $y^*_{i,t}$. For example:
 
 $$\begin{aligned}
 \text{probit: } && y_{i,t} &= 1\{y^*_{i,t}+u_{i,t}>0\} \text{ with } u_{i,t}\sim N(0,1) \\ 
@@ -130,47 +134,49 @@ etc
 \end{aligned}
 $$
 
-In all these cases, there is an explicit individual fixed component $\alpha_i$, which may cause a bias on estimated coefficients if not accounted for. Furthermore, while estimating models with explicit fixed effects is possible for some models, like the poisson or logit, explicit fixed effects estimators are not available for probit or tobit models, among others, and simply including dummies for individual fixed effects does not yield consistent estimates due to the incidental parameter problem. 
+In all these cases, there is an explicit individual fixed component $\alpha_i$, which may cause a bias on estimated coefficients if not accounted for. Furthermore, while estimating models with explicit fixed effects is possible for some models, like the poisson or logit, explicit fixed effects estimators are not available for probit or tobit models, among others, and simply including dummies for individual fixed effects does not yield consistent estimates due to the incidental parameter problem.
 
-@wooldridge2019 and @wooldridge2010econometric show that the CRE approach can be used to estimate these models consistently, by following the same logic as in the linear case. That is, estimate the group specific means for the time-varying variables and include them in the model specification, before the estimation of the non-linear model. The linear model could be directly estimated using pooled cross-section, and clustering standard errors at the panel level. In fact, this approach has been used in @wooldridge2023 to estimate treatment effects of staggered adoption of treatments in non-linear models, albeit concentrating on a single dimension (panel). 
+@wooldridge2019 and @wooldridge2010econometric show that the CRE approach can be used to estimate these models consistently, by following the same logic as in the linear case. That is, estimate the group specific means for the time-varying variables and include them in the model specification, before the estimation of the non-linear model. The linear model could be directly estimated using pooled cross-section, and clustering standard errors at the panel level. In fact, this approach has been used in @wooldridge2023 to estimate treatment effects of staggered adoption of treatments in non-linear models, albeit concentrating on a single dimension (panel).
 
-In this framework, `cre` has the additional advantage over other methods. Because one has explicit access to all the variables in the model, including the constructed variables, the estimation of partial effects can be done directly using available post-estimation commands such as `margins`. There are no other changes in the estimation process, and the strategy is easily extended to multiple fixed effects, as discussed in the previous section. Furthermore, as discussed in @wooldridge2019, one can consider even more flexible specifications by allowing for interactions between the group-specific means and other variables in the model, including time dummy variables. 
+In this framework, `cre` has the additional advantage over other methods. Because one has explicit access to all the variables in the model, including the constructed variables, the estimation of partial effects can be done directly using available post-estimation commands such as `margins`. There are no other changes in the estimation process, and the strategy is easily extended to multiple fixed effects, as discussed in the previous section. Furthermore, as discussed in @wooldridge2019, one can consider even more flexible specifications by allowing for interactions between the group-specific means and other variables in the model, including time dummy variables.
 
 ## Standard Errors and Hypothesis Testing
 
 There is not much information available for the correct approach estimating Standard Errors for CRE models. Because the model is based on a two-step estimation process, we know that standard errors would not be consistent, due to the additional uncertainty introduced by the inclusion of pre-estimated parameters.
 
-Furthermore, in contrast with the demeaning procedure behind the fixed effects estimator in linear models, the influence functions of the estimated coefficients change when the group means are included. Because of this, it is not possible to recover asymptotic or robust standard errors even if the point estimates of time varying coefficients are the same. 
+Furthermore, in contrast with the demeaning procedure behind the fixed effects estimator in linear models, the influence functions of the estimated coefficients change when the group means are included. Because of this, it is not possible to recover asymptotic or robust standard errors even if the point estimates of time varying coefficients are the same.
 
 According to @wooldridge2010econometric, one alternative is to report clustered standard errors, using the same dimension as the group means. In panel data, this is to either cluster at the individual level, or use a random effects estimator, with the corresponding standard errors. This produces the same standard errors as the fixed effects estimator for the coefficients of time varying covariates. This can be easily extended to non-linear models.
 
-For models with multiple fixed effects, the estimation of standard errors is less clear. On the one hand, if one uses multi-way clustered standard errors, the standard errors of the standard demeaning/FE estimator and the CRE estimator will be the same, except for differences in the degrees of freedom. This, however, may not be desirable if one is not interested in multiway clustering. This is common in panel data models, where one wants to control for individual and time fixed effects, but only wants to cluster at the individual level. In such cases, it may be advisable to use resampling methods, like bootstrapping, to provide more reliable standard errors. In this case @wooldridge2010econometric suggests bootstrapping the whole process, including the estimation of the group means.^[For the propose method, this would involve using `bootstrap` before `cre, abs()`, for any estimation.]
+For models with multiple fixed effects, the estimation of standard errors is less clear. On the one hand, if one uses multi-way clustered standard errors, the standard errors of the standard demeaning/FE estimator and the CRE estimator will be the same, except for differences in the degrees of freedom. This, however, may not be desirable if one is not interested in multiway clustering. This is common in panel data models, where one wants to control for individual and time fixed effects, but only wants to cluster at the individual level. In such cases, it may be advisable to use resampling methods, like bootstrapping, to provide more reliable standard errors. In this case @wooldridge2010econometric suggests bootstrapping the whole process, including the estimation of the group means.[^3]
+
+[^3]: For the propose method, this would involve using `bootstrap` before `cre, abs()`, for any estimation.
 
 # `cre` Command: Implementation in Stata {#sec-3}
 
-The `cre` command is a prefix command that estimates the CRE model for most linear and non-linear models in Stata. The syntax of the command is as follows: 
+The `cre` command is a prefix command that estimates the CRE model for most linear and non-linear models in Stata. The syntax of the command is as follows:
 
-`cre, abs(varlist) [options]: [estimation command] [variables] [if in] [weights], [options]` 
+`cre, abs(varlist) [options]: [estimation command] [variables] [if in] [weights], [options]`
 
-Where `estimation command` is the command that will be used to estimate the model. In this case, the `cre` command will identify all the dependent variables in the model, along with other sample restrictions, and calculate conditional group means based on the groups defined by the `abs(varlist)`. The group means are then added to the model before estimation. The `cre` command supports both balanced and unbalanced panels, as well as multiple fixed effects relying on `reghdfe` for the estimation of the pseudo conditional means. 
+Where `estimation command` is the command that will be used to estimate the model. In this case, the `cre` command will identify all the dependent variables in the model, along with other sample restrictions, and calculate conditional group means based on the groups defined by the `abs(varlist)`. The group means are then added to the model before estimation. The `cre` command supports both balanced and unbalanced panels, as well as multiple fixed effects relying on `reghdfe` for the estimation of the pseudo conditional means.
 
-A detailed list of other options include: 
+A detailed list of other options include:
 
-- `abs(varlist)`: a list of variables that define the groups for which the conditional means will be calculated. This can be a single variable or a combination of variables.
-- `drop`: if specified, the command will drop the group means variables from the dataset after estimation.
-- `dropsingletons`: if specified, the command will drop observations that have a single observation in any given group. Note that `reghdfe` default is to drop these observations, rather than keep them as in this case.
-- `prefix`: provides a prefix to be used to name the group means variables. The default uses "`m`" as a prefix. For every variable that has variation across all groups defined in `abs(varlist)`, the command will create a new variable with the prefix followed by the variable name. `m1_x`, `m2_x`, etc, corresponding to the group means for variable `x` for the first, second, etc group defined in `abs(varlist)`. Note that when trying to estimate means for interaction terms, the command will attempt to name the new variable using Stata guidelines for variable names. If the variable name is too long, the command will create a generic name `_v#`.
-- `hdfe(options)`: options to be passed to `reghdfe` command. This can be used to make better use of alternative speed-up options in `reghdfe`. 
+-   `abs(varlist)`: a list of variables that define the groups for which the conditional means will be calculated. This can be a single variable or a combination of variables.
+-   `drop`: if specified, the command will drop the group means variables from the dataset after estimation.
+-   `dropsingletons`: if specified, the command will drop observations that have a single observation in any given group. Note that `reghdfe` default is to drop these observations, rather than keep them as in this case.
+-   `prefix`: provides a prefix to be used to name the group means variables. The default uses "`m`" as a prefix. For every variable that has variation across all groups defined in `abs(varlist)`, the command will create a new variable with the prefix followed by the variable name. `m1_x`, `m2_x`, etc, corresponding to the group means for variable `x` for the first, second, etc group defined in `abs(varlist)`. Note that when trying to estimate means for interaction terms, the command will attempt to name the new variable using Stata guidelines for variable names. If the variable name is too long, the command will create a generic name `_v#`.
+-   `hdfe(options)`: options to be passed to `reghdfe` command. This can be used to make better use of alternative speed-up options in `reghdfe`.
 
-In addition to the standard information left by the estimation command, the `cre` will add the list of group mean variables created for the estimation in `e(m_list)`. 
+In addition to the standard information left by the estimation command, the `cre` will add the list of group mean variables created for the estimation in `e(m_list)`.
 
-The command has been tested for most 1 and 2 word commands, and after `ivreg` and `ivregress` commands. However, for unsupported commands, an alternative approach would be to use `cre` for a fully specified model, and then use the command of interest including the group means variables manually in the model. 
+The command has been tested for most 1 and 2 word commands, and after `ivreg` and `ivregress` commands. However, for unsupported commands, an alternative approach would be to use `cre` for a fully specified model, and then use the command of interest including the group means variables manually in the model.
 
 # Monte Carlo Simulations {#sec-4}
 
-To assess the performance of the `cre` command, we conducted a Monte Carlo simulation study. Instead of focusing on a model with a single fixed effect, we considered a case with two unobserved fixed effects, which allows for a structure of unbalanced panels. Without loss of generality, we also consider a model with 2 explanatory variables that are correlated with the unobserved fixed effects, but are otherwise exogenous. Finally, we consider that the expected latent variable is a linear function of the explanatory variables and fixed effects. The data generating process is as follows: 
+To assess the performance of the `cre` command, we conducted a Monte Carlo simulation study. Instead of focusing on a model with a single fixed effect, we considered a case with two unobserved fixed effects, which allows for a structure of unbalanced panels. Without loss of generality, we also consider a model with 2 explanatory variables that are correlated with the unobserved fixed effects, but are otherwise exogenous. Finally, we consider that the expected latent variable is a linear function of the explanatory variables and fixed effects. The data generating process is as follows:
 
-```
+```         
 set obs 1000
 // Generates indicators for the two fixed effects
 gen id1 = runiformint(1,100)
@@ -188,11 +194,11 @@ gen x2 = runiform(-1,1)-invnormal(c1+.5)-invnormal(c2+.5)
 gen y_star = 1 + x1 + x2 + c1 + c2
 ```
 
-Since the equivalence between FE and CRE has been shown for linear models, we focus on the performance of the `cre` in the context of non-linear models. For this, we consider 4 different models: probit, fractional regression probit, tobit, and poisson. 
+Since the equivalence between FE and CRE has been shown for linear models, we focus on the performance of the `cre` in the context of non-linear models. For this, we consider 4 different models: probit, fractional regression probit, tobit, and poisson.
 
 For each one, the data generating process is as follows:
 
-```
+```         
 // probit
 gen y_probit = 1*(y_star-1+rnormal()>0)
 // fractional probit
@@ -205,7 +211,7 @@ gen y_poisson = rpoisson(exp(y_star))
 
 We then estimate the models under three assumptions: one where the fixed effects are observed including `c1` and `c2` in the specification (benchmark), one where they are not considered, and one where we use the CRE approach using the `cre` command. Using the probit model as an example, the estimation process is as follows:
 
-```
+```         
 // True model / unfeasible estimator
 probit y_probit x1 x2 c1 c2
 // Pooled data estimator
@@ -214,12 +220,11 @@ probit y_probit x1 x2
 cre, abs(id1 id2): probit y_probit x1 x2 
 ```
 
-This exercise is repeated 10000 times, and the results are compared in terms of the distributions of the marginal effects for the probit and fractional probit model, and coefficients for the tobit and poisson models, under the three scenarios. We use `parallel`[@vegayon2019] to speed up the process. 
+This exercise is repeated 10000 times, and the results are compared in terms of the distributions of the marginal effects for the probit and fractional probit model, and coefficients for the tobit and poisson models, under the three scenarios. We use `parallel`[@vegayon2019] to speed up the process.
 
-The results of the simulation are presented in @fig-cre and @tbl-cre. The figure presents the densities of the estimated coefficients across all simulations, whereas the table provides a brief summary of the bias and mean absolute error (MAE) of the estimated coefficients. 
+The results of the simulation are presented in @fig-cre and @tbl-cre. The figure presents the densities of the estimated coefficients across all simulations, whereas the table provides a brief summary of the bias and mean absolute error (MAE) of the estimated coefficients.
 
-:::{#fig-cre fig-pos="H"}
-
+::: {#fig-cre fig-pos="H"}
 ![](simulation/fig1.png)
 
 Estimated marginal effects/Coefficient densities for non-linear models
@@ -231,14 +236,11 @@ Because the individual effects are constructed to be correlated with the explana
 
 On the other hand, the CRE approach seems to provide consistent estimates for the coefficients/marginal effects, with a distribution that is centered around the true point estimate, with slightly higher variance than the benchmark. Based on the results from @tbl-cre, the bias of the CRE approach is negligible, with a MAE that is about 20% to 30% larger than the benchmark.
 
-:::{#tbl-cre tbl-pos="H"} 
+::: {#tbl-cre tbl-pos="H"}
+{{< include simulation/table1.txt >}}
 
-{{< include simulation/table1.txt >}} 
-
-Bias and MAE for the estimated marginal effects/Coefficients for non-linear models 
-
+Bias and MAE for the estimated marginal effects/Coefficients for non-linear models
 :::
-
 
 # Conclusion {#sec-5}
 
