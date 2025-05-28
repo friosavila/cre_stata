@@ -164,7 +164,9 @@ Using the sample where all data is observed ($s_{i,t} = 1$). As before, $a^w_0$ 
 
 Interestingly, if the panel data is balanced, $a^w_0 + \epsilon^w_i$ and $a^w_0 + \epsilon^w_t$ are equivalent to the group means of the variables. However, that is not the case when the data is unbalanced.
 
-With this, we can write the CRE model as: $$y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + w_{t}\beta_w + \gamma_0 + \epsilon^w_i\gamma +\epsilon^w_t\delta+ v_i + v_t + u_{i,t}
+With this, we can write the CRE model as: 
+
+$$y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + w_{t}\beta_w + \gamma_0 + \epsilon^w_i\gamma +\epsilon^w_t\delta+ v_i + v_t + u_{i,t}
 $$ {#eq-mcre-final}
 
 where $v_{i}$ and $v_{t}$ are the individual and time error term that are uncorrelated with $x_{i,t}$. As shown by @baltagi2024 and @yang2022, this can be estimated via pooled OLS or GLS (RE estimator), with the estimates for $\beta_x$ being equivalent to the MW-FE estimates.
@@ -184,8 +186,10 @@ Consider a general nonlinear model where the conditional expectation or relevant
 $$E[y_{i,t} | x_{i,t}, z_i, \alpha_i] = g(x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i)
 $$
 
-or a latent variable model: $$y^*_{i,t} = x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i
-$$ {#eq-nl-1}
+or a latent variable model: 
+
+$$y^*_{i,t} = x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i
+$${#eq-nl-1}
 
 where $y_{i,t}$ is observed based on $y^*_{i,t}$ (e.g., $y_{i,t} = 1(y^*_{i,t} + u_{i,t} > 0)$ for binomial models).
 
@@ -205,73 +209,44 @@ This approach provides consistent estimates of the parameters for both time-vary
 
 ## Standard Errors and Hypothesis Testing {#sec-2-3}
 
-Estimating @eq-cre-final involves using generated regressors ($\bar x_i$). While the point estimates for $\beta_x$ in the linear model are identical to FE, the standard errors are not necessarily the same, even asymptotically, because the inclusion of $\bar x_i$ changes the model structure compared to the demeaning process of FE, affecting the new compounded error and degrees of freedom of the model. Specifically, unless $\bar x_i$ can fully explain the unobserved component $\alpha_i$ (thus making $\nu_i=0$ ), the procedure introduces serial correlation in the model.
+As described above, estimating a model via CRE, as in @eq-cre-final, involves using generated regressors ($\bar x_i$). While the point estimates for $\beta_x$ in the linear model are identical to FE, the standard errors are not necessarily the same, even asymptotically, because the inclusion
+of $\bar x_i$ changes the model structure compared to the demeaning process of FE, affecting the new compounded error and degrees of freedom of the model. Specifically, unless $\bar x_i$ can fully explain the unobserved component $\alpha_i$ (thus making $\nu_i=0$ ), the procedure introduces intra group correlation in the model.
 
-For **linear models**, @wooldridge2010econometric [chap 10.5.3] shows that using the standard RE estimator (GLS) on the augmented equation @eq-cre-final yields standard errors for $\beta_x$ that are asymptotically equivalent to the usual FE standard errors. Alternatively, estimating @eq-cre-final by pooled OLS and using cluster-robust standard errors (clustered at the individual level $i$) also yields asymptotically valid standard errors, which are equivalent to the clustered FE standard errors. The `cre` command, being a prefix, allows the user to choose the estimation command (e.g., `regress` or `xtreg, re`) and appropriate standard error options (e.g., `vce(cluster id)`).
+For **linear models**, @wooldridge2010econometric [chap 10.5.3] shows that using the standard RE estimator (GLS) on the augmented equation @eq-cre-final yields standard errors for $\beta_x$ that are asymptotically equivalent to the usual FE standard errors. Alternatively, estimating @eq-cre-final by pooled OLS and using cluster-robust standard errors (clustered at the individual level $i$) also yields asymptotically valid standard errors, which are equivalent to the clustered FE standard errors. 
 
-For **nonlinear models**, the standard approach is to estimate the augmented model using the pooled maximum likelihood estimator (e.g., `probit`, `logit`, `poisson`) and compute standard errors clustered at the individual level (`vce(cluster id)`). This accounts for the within-individual correlation induced by $v_i$ (and potentially $u_{i,t}$ if serially correlated) [@wooldridge2010econometric chap 15.8].
+For **nonlinear models**, the standard approach is to estimate the augmented model using the pooled maximum likelihood estimator (e.g., `probit`, `logit`, `poisson`) and compute standard errors clustered at the individual level (`vce(cluster id)`). This accounts for the within-individual correlation induced by $v_i$ (and potentially $u_{i,t}$ if serially correlated) [@wooldridge2010econometric chap 15.8]. Alternatively, RE estimators could also be applied to the augmented model, although this is less common in practice.
 
-A more robust, though computationally intensive, alternative for obtaining standard errors, especially if the distributional assumptions about $v_i$ or $u_{i,t}$ are uncertain, is to **bootstrap** the entire estimation process. This involves resampling individuals (clusters) with replacement, recalculating the $\bar x_i$ within each bootstrap sample, estimating the augmented model, and obtaining the distribution of the coefficients across bootstrap replications [@wooldridge2010econometric suggests this]. This can be achieved in Stata by using the `bootstrap` prefix *before* the `cre` prefix: `bootstrap: cre, abs(idvar) ...`.
+A more robust, though computationally intensive, alternative for obtaining standard errors, especially if the distributional assumptions about $v_i$ or $u_{i,t}$ are uncertain, is to **bootstrap** the entire estimation process. This involves resampling individuals (clusters) with replacement, recalculating the $\bar x_i$ within each bootstrap sample, estimating the augmented model, and obtaining the distribution of the coefficients across bootstrap replications. 
+
+With multiple dimensions, there literature says very little regarding the correct estimaton of standard errors. Because using multiple dimensions can also introduce within-groups correlation, it may be that one needs to control for multiple levels of clustering, or use Bootstrap methods to atleast account for one dimension adjustments. While this is an area that requires further research, the implemention is left as an experimental feature.
 
 ## Calculating Average Partial Effects (APEs) {#sec-2-4}
 
-In nonlinear models, the estimated coefficients typically do not directly represent the marginal effect of a covariate on the outcome variable. Instead, Average Partial Effects (APEs) or Marginal Effects at Means (MEMs) are usually reported. A significant practical advantage of the CRE approach implemented via `cre` is the ease of calculating APEs.
+The calculation of average marginal effects in linear models is straight forward. Because the CRE approach provides consistent estimates that are equivalent to the FE estimator, the marginal effects can be calculated directly from the estimated coefficients as is usual. In nonlinear models, the estimated coefficients typically do not directly represent the marginal effect of a covariate on the outcome variable, specially in the presence of interactions of polynomials. In this case, aAverage Partial Effects (APEs) or Marginal Effects at Means (MEMs) are necessary to better understand the results of a model. A significant practical advantage of the CRE approach implemented via `cre` is the relative ease of calculating APEs.
 
-Because `cre` explicitly adds the mean variables ($\bar x_i$) to the model specification before the core estimation command is executed, the resulting estimation output (`e()`) contains all necessary coefficients ($\beta_x, \beta_z, \gamma$) and the variance-covariance matrix. Consequently, Stata's powerful `margins` command can be used directly after estimation to compute APEs.
+Based on @wooldridge2019, the APE for a variable $x_{i,t}$ in a nonlinear model with unobserved heterogneity can be calculated as folows:
 
-For a time-varying variable $x_{k,it}$ (continuous):
+1. Define the outcome Average Structural Function (ASF) for the model, as: 
 
-```         
-cre, abs(idvar) ... : /* estimation command */ ...
-margins, dydx(x_k) // Calculates dE[y]/dx_k, averaged over observations
-```
+$$ASF(x_{i,t}) = E_{c_i}[m_t(x_{i,t}, c_i)]$$
 
-For a time-invariant variable $z_{g,i}$ (continuous):
+which eliminates the unobserved heterogeneity $c_i$ from the model, by averaging it out.
 
-```         
-cre, abs(idvar) ... : /* estimation command */ ...
-margins, dydx(z_g) // Calculates dE[y]/dz_g, averaged over observations
-```
+2. When estimating nonlinear models using the CRE approach, rather averaging over the unobserved heterogeneity $c_i$, one averages over the auxiliary terms $\bar x_i$. Specifically we would have:
 
-The `margins` command correctly accounts for the nonlinear functional form and computes standard errors using the delta method based on the clustered VCE from the estimation step. This seamless integration simplifies the interpretation of results from nonlinear CRE models.
+$$ASF(x_{i,t}) = \frac{1}{N_s} \sum_{i,t} [ m_t(x_{i,t}, \bar x_i)]$$
 
-## Interaction Terms {#sec-2-5}
+3. The APE for a variable $x_{i,t}$ is then calculated as the derivative of the ASF with respect to $x_{i,t}$:
 
-Researchers often want to include interaction terms in their models as well as categorical variable. Methodologogically, adding interactions and categorical variables to the CRE model is straightforward, because there are no changes to the model assumptions. In other words, interactions and categorical variables should be treated as any other variable in the model. From a programatically perspective, `cre` deals with this cases using the following process.
+$$APE(x_{i,t}) = \frac{\partial ASF(x_{i,t})}{\partial x_{i,t}} = \frac{1}{N_s} \sum_{i,t} \frac{\partial m_t(x_{i,t}, \bar x_i)}{\partial x_{i,t}}$$
 
-1.  All interactions and categorical variables in the main model are expanded (all interactions appear explicitly in the independent variable list).
-2.  For the case of categorical variables and interactions, temporary variables are created.
-3.  `cre` then proceeds to create the variable means, for all variables including the temporary ones.
-4.  As usual, all variable means are added to the model, along with the original variables, and the model is estimated.
+where $N_s$ is the number of observations in the estimation sample.
 
-Consider an interaction between a time-varying variable $x_{1,it}$ and a time-invariant variable $z_{1,i}$:
-
-```         
-cre, abs(idvar): /* estimation command */ y x1 x2 c.x1#c.z1 z1 z2 ...
-```
-
-Here, `cre` will identify `x1` and `x2` as time-varying and create their means (`_m_x1`, `_m_x2`). It will also identify the *interaction term* `c.x1#c.z1` as potentially time-varying (since $x_1$ varies over time). It will then compute the individual mean of this interaction term, $\overline{(x_{1,it} \times z_{1,i})}$, and include it as an additional regressor (`_m_x1_z1` or similar).
-
-Similarly, categorical variables can be included in the model:
-
-```         
-cre, abs(idvar): /* estimation command */ y x1 x2 i.x3 ...
-```
-
-`cre` will create means for `x1`, `x2`, and the create means for all levels of `x3` excluding the base level.
-
-Post-estimation commands like `margins` can then be used to compute marginal effects or contrasts involving these interactions:
-
-```         
-margins, dydx(x1) at(z1=(0 1)) // Effect of x1 at different levels of z1
-margins, dydx(x1) dydx(z1) // Check interaction effect interpretation
-```
-
-This works because we are interested in estimating the marginal effects of the main variables of interest, after integrating over the unobserved errors, which are assumed fixed. In the Mundlack specification perspective, this implies that created variables, like mean of $x$, is considered fixed when $x$ changes.
-
-The `cre` command attempts to create intuitive names for the generated mean variables corresponding to interactions, but complex interactions might result in generic names (`_v#`) if the generated name exceeds Stata's variable name length limits. The list of generated mean variables is stored in `e(m_list)` for inspection.
+In other words, we when applying the CRE approach, the auxiliary terms $\bar x_i$ are treated as fixed, when calculating the APEs for all other variables in the model. On this point, @wooldridge2019 argues that standard errors for this expression can be difficult to obtain. However, Stata's `margins` command provides a convenient way to calculate APEs and their standard errors based on the delta method.
 
 # `cre` Command: Implementation in Stata {#sec-3}
+
+## Overview: how `cre` works:
 
 The `cre` command is implemented as a Stata prefix command. This means it is placed before a standard Stata estimation command to modify its behavior. `cre` intercepts the command, identifies the variables and sample, calculates the necessary individual means for time-varying covariates, adds these means to the variable list, and then executes the original estimation command with the augmented specification.
 
