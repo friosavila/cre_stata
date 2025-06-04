@@ -1,0 +1,89 @@
+---
+title: "Untitled"
+format: html
+---
+
+1. You don't highlight well what the specific contribution(s) of your paper and command are intended to be (as the referee says). After reading the paper, it remains unclear to me. (Is it: You’ve got a ‘utility’ (prefix command) that removes some of the hassles from manually creating demeaned variables but then provide some applications … or more than this?]
+
+**Answer:** Thanks for pointing this out. I have attempted to clarify the contribution of the paper. In this case, as you indicate, the contribution is to provide a prefix command that simplifies the process of estimating correlated random effects (CRE) models. I show that this can be done for both linear and non-linear models, with balanced and unbalanced panels data. 
+
+2. Relatedly, you do not do enough to differentiate your product from what is already available to users. The SJ has already had 2 review papers on CRE modelling, by Schunk (2013) and Schunck & Perales (2017). The first paper is a review without specific code. The second repeats some of that review, but also cites lots of other literature – not necessarily by economists but still relevant -- showing awareness of the CRE approach (including Allison’s 2009 well-known piece) and its close relation, so-called ‘hybrid’ models, but places all in a generalized mixed model framework thereby extending the CRE approach to all models that -meglm- can fit. (I.e., with their -xthybrid- program, they extend Perales’s -mundlak- program to non-linear models as well as linear ones.) In my view, Schunck & Perales are weak on the analytical foundations/justifications for the non-linear extensions, and they don’t consider balanced versus unbalanced panel issues seriously. All in all, however, (i) the SJ has already had a review of basic CRE modelling approaches, so we don’t need another … and yet much of your paper, up to section 2.1 (page 4) is that review. (ii) I think you are somewhat unfair on earlier SJ papers especially S&P, because you simply relegate mention of the latter to a footnote but never returning to their article or -xthybrid- which appears to have much overlapping functionality with your -cre- prefix command. (Indeed, earlier literature on CRE models, including by non-economists, could get more mention.) Relatedly, StataNow can fit CRE linear models, with the new option to -xtreg-. You shouldn’t simply relegate this to a footnote -- it should receive more attention as part of the product differentiation.
+
+**Answer:** I agree that another review on CRE models is not needed. However, I think that it is necessary to have the paper be self contained, and provide an overview of the CRE approach. In this version I tried to clarify the contribution of the paper focusing on the fact that it can be applied to other models. Including those by `meglm`. In fact, In the empirical section, I show the results of the `cre` command compared to `xtreg, cre`, and to `xthybrid` (for poisson regression). There are now three clear contributions: 
+
+- The `cre` command can be used for other linear and non-linear models. This include those that `meglm` can fit, albeit with one added step. 
+- Being a prefix command, the functionality of post-estimation commands such as `margins` is preserved, which is not the case for `xthybrid`.
+- While less explored, I added literature on the use of CRE with mutliple fixed effects, and provide an example of that with the `cre` command. Although I left those results and simulations in the appendix. 
+
+3. Comparing software implementations, and illustrating differences using some common dataset, is surely important too. I’ve played around with the nlswork dataset that comes with Stata and find that your program appears to produce (slightly but noticeably) different estimates from -xtreg, cre- and -xthybrid- for a simple linear model. Please see do/log file attached. I’ve also tried to compare fits of a probit CRE model using your prefix command and -xthybrid- and got estimates even more noticeably different estimates (and different numbers of observations). I don’t know why.
+
+**Answer:** I have added the comparison with `xtreg, cre` and `xthybrid` in the empirical section. This also help me show how `cre` should be specified. In the code provided, for example, you were attempting to control for both **tenure and age** fixed effects. The correct specification should have been `cre, abs(idcode): command`.
+ 
+
+4. In the light of these remarks, potential contributions to highlight are therefore perhaps (a) easily and properly fitting CRE models for unbalanced panels (not only balanced panels), for both linear and non-linear models; (b) extensions to multiple ‘fixed’ (“level 2”) effects, and (c) extensions to deal with dynamic (lagged dependent variable) models, whether linear or non-linear. Or (d) combinations of all of the above.
+
+**Answer:** I add most of this features as part of the contribution of the paper. The one I did not include is (c) dynamic models. On the one hand, allowing for dynamic components (leads and lags) is stright forward. The issue, however, has to do with auto-regressive models, because those require a different estimation approach all together, beyond the scope of this paper. 
+
+
+5. The referee’s report emphasises a lack of mention of (d) and refers you to a paper from OBES (attached for convenience). The report also states that your treatment of unbalanced panels seems to be incorrect (point a). Note that the OBES authors are aware of Wooldridge (2019). My (non-expert) reading is that the OBES paper focuses on nonlinear dynamic models and there are additional issues in that context, notably ‘initial conditions’. All in all, perhaps one way of addressing the referee’s point would be to make clear from the outset that your article does not consider dynamic models at all, and also mention this in your -cre- help-file. [That’s not to say that other people haven’t also used CRE approaches and also controlled for initial conditions: see, e.g., Stewart, JAE 2007.]
+
+**Answer:** I emphasize now that the paper does not consider dynamic models (auto-regressive models), citing the paper. In addition, I added more literature on both multiple fixed effects and unbalanced panels. THe bottom line is that when one has dynamic models with unbalanced panels, a different estimation approach is needed, which is beyond the scope of this paper.
+
+6. Potential contribution/extension (b) on multiple fixed effects. This is essentially section 2.2 (pp. 4-5). I found the brief discussion here quite confusing. Put differently, you appear to be writing as if Jeff W were the reader, not a generalist like me, and assuming knowledge of the recent heterogeneous diff-in-diff literature. There’s too much telepathy. The communication is not helped by, e.g., the creation of cross-person and cross-time averages which one should “estimate … as the solution to the following model” referring to eqn (7). It’s unclear how one ‘solves’ (7) to generate the averages especially when there appear to be no constraints on error term epsilon_it. You then go on to use a two-way FE model in your simulation exercise, and that’s not particularly clear either. A bigger issue is that the SJ doesn’t ‘validate’ statistical results; we rely on validation from relevant publications in refereed statistics/econometrics journals. Your remarks inter alia about SEs indicate that this topic is relatively unsettled. (And the Woolridge 2023 paper you cite is not yet published.) All this leads me to say that I think you should drop the multiple fixed effects material. (Rewriting is required anyway.)
+
+**Answer:** I have tackled this in two ways. First, I have added newer papers that discuss multiple fixed effects, and the CRE approach. I have also provided a more detailed discussion of how CRE can be proxied via regressions, mantaineing the same idea of "adding group averages". For the multiple fixed effects, I made it clear that adding dimension specfic averages is what the literature suggests, but when it comes to unbalanced panels, one needs to use an iterative approach to estimate the averages. This cites earlier work of mine, as well as Correira(2016) `reghdfe` or the implementation that Stata `areg, abs` is able to do now. In any case, i moved the simulation and empirical results that refer to multiple fixed effects to the appendix, but keeping it in the paper as an experimental feature that works empirically.
+ 
+
+7. All in all, it seems that the main contributions for users that a revised paper might focus on are: (i) {advances on|comparisons with|corrections of} material in Schunck & Perales, with (ii) focus on extension of functionality for users of fitting CRE models to unbalanced panels, and to non-linear models. I.e., precisely the focuses discussed by Woolridge (JE 2019) and no more. [Other stuff could be signalled briefly in a Conclusions section.] Related to my validation point, there would also need to be more detailed citation of which particular sections of the Woolridge article you were using at each time. [This point carries across to your current draft – it’s little help to a user to simply cite a huge textbook by Wooldridge; you should provide section and/or page numbers.] More generally, be clearer about how you deal with unbalanced panels. (Do you have an s_it indicator like Wooldridge, etc etc?)
+
+**Answer:** Thanks for the suggestions. I have added more details on which chapters or pages (in case of the book) I am referring to, as well as specific sections of Wooldridge (2019) paper. I do believe the paper needs to keep the multiple-fixed effects section, specially in light of the new cited papers. Nevertheless, those results are now in the appendix.
+
+8. You also need to explicitly discuss how Average Partial Effects should be calculated, especially for nonlinear CRE models. (At the moment you refer to APEs but never show code to derive them, and for which variables.) For linear models, the APE of an “it” (panel) variable is simply the coefficient on that variable. But how is it calculated in a non-linear context, and will -margins, dydx(variable_it)- produce the “right” answer?
+
+**Answer:** I have added a section on APEs, citing Wooldridge (2019) discussion on the topic. For the empirical section I have added that uses `margins` to estimate the APEs, for cases with interaction terms, to consider a more general case. I compare the results to those obtained using official Stata commands, such as `xtlogit` or `xtpoisson`, and show that the results are consistent
+
+9. This discussion would need to be bolstered by empirical illustrations (as the referee asks too) based on accessible dataset(s). Perhaps a brief one to show that -cre- produces the same results as other implementations but is somehow better? Perhaps one linear model example (very brief or only in the -example do-file), and also one or more non-linear model applications.
+
+**Answer:** I have followed your suggestion and added a longer empirical section, showing the `cre|regress` and `cre|xtreg,re` compares to `xtreg, fe` and `xtreg, cre`. I emphasize the consistency of the results. I also provide a similar excercise using poisson models and logit models, as examples for non-linear models. All are included in the dofile-and log file that accompanies the paper.
+ 
+
+10.    What happens in CRE models if users want to introduce interaction terms (whether between time-varying individual level variables or between a time-varying individual variable and a fixed variable)?  Economists rarely use interactions, but most other disciplines use them quite a lot. It’d be useful to make explicit what they should be doing. Does -cre- do things the right way, including for APE derivations?
+
+**Answer:** I have emphasize more that, if `margins` can be used, then marginal effects can be estimated. While I do not add an interaction between time-varying and fixed effects, I do add a squared paramter in the specification, being able to obtain almost identical results as the Fixed Effects benchmark. For clarity, I add a step-by-step process of what `CRE` does, which may help users understand what happens on the background. Additionally,  the section of APE should make it clear that all "created" variables should be treated as fixed, whenever marginal effects for other variables are estimated.
+
+11.    There’s something awry with your “simulation.do”. It doesn’t appear to reproduce the code and output shown in your article. I suspect that the file has been accidentally truncated at line 78 “** MWAY”.
+
+**Answer:** I have created two versions of this. THe first one concentreates on a 1way fixed effect simulation, while the second one is a 2way fixed effects simulation (for appendix).  I include the code, created data, and log files for both. 
+
+12.    Your help-file states under Remarks that the “program was created as a tool to facilitate the comparison of CRE in quantile regression setups.” Quantile regression is not a focus of the submission at all!
+
+**Answer:** Thank you for noticing this. I t was a "legacy" comment that described why i wrote CRE on the first place. But I do agree that should be removed from SJ edition.
+
+## Referee Report
+
+1. What is the core purpose and added value of the proposed command? The paper does not clearly articulate the main point or contribution of the new prefix command. It appears that the primary contribution lies in providing correct standard errors for the estimated coefficients. However, this critical aspect is not clearly or adequately explained in the manuscript. Without a clear understanding of the command's purpose and its potential advantages, the rest of the paper becomes difficult to evaluate and less impactful.
+
+**Answer**: Thank you for pointing that out. I have now narrow made the paper more explicit on its contribution for three points:
+
+- The `cre` command can be used for other linear and non-linear models. This include those that `meglm` can fit, albeit with one added step. 
+- Being a prefix command, the functionality of post-estimation commands such as `margins` is preserved, which is not the case for `xthybrid`.
+- While less explored, the command allows for multi-way fixed effect CRE, albeit i left it as an experimental feature.
+
+2. Explanation of clustered or bootstrap standard errors: This aspect of the paper is particularly obscure and would benefit from a much more detailed explanation.
+
+**Answer**: I decided to draw back on this particular aspect. First, I simply reiterate the literature and say that when estimating CRE-1way models, one should either use GLS (`xtreg,re` or mixed models), or use pooled estimators with `cluster()` standard errors. I show in the empirical example how that compares across estimation methods. For the Bootstrap, I mention it briefly, without trying to go deeper into how should that be done, as I believe its now out of the scope of the paper.
+
+3. Dynamic specifications in non-linear models: The paper seems to exclude dynamic specifications in the non-linear case, which is arguably the most interesting and practically relevant application. Could the authors:
+Explicitly discuss whether dynamic specifications are supported, and if not, why?
+
+**Answer**: `cre` is able to estimate dynamic models. However, the paper that is mentioned here related to dynamic/auto-regressive models. In cases like this, a completely different estimation method is required, which is now mentioned in the paper. For "simpler" dynamic models with leads and lags of exogenous variables, there is no need of further discussion, since those are just other uses of independent variable transformations. If one believes, say, a panel logit with leads and lags provides a good approach for the estimation, then `cre` can also provide a reasonable estimation of the problem.
+
+4. Handling unbalanced panels: The proposed solution for handling unbalanced panels appears to be incorrect (see Albarran, Carrasco and Carro, 2019). The authors should:
+Provide a detailed explanation of their approach to unbalanced panels.
+Address potential errors or inconsistencies in their methodology.
+
+**Answer**: My reading of the paper suggests that the incorrect manipulation of unbalanced panels is specific to dynamic models with lags of the dependent variable as explanatory variable, which I have mentioned is beyond the scope of the paper. I do add a brief note on how is done for 1 fixed effect (using relevant sample), and how it is empirically approach via regression (constraining the sample). The results provided, and comparisons with official commands `xtreg,cre` shows that this is correct, atleast for static models.
+
+5. Empirical application: The absence of an empirical application significantly weakens the paper.
+
+**Answer**: Thank you for pointing that out. I have now added an example using `nlswork.dta` dataset, showing how it works, and compares with current methods. I also add to the appendix a case for 2 way fixed effect and reghdfe. 

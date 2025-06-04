@@ -131,10 +131,10 @@
 \author{}{
 Fernando Rios-Avila
 \\
-Levy Economics Institute of Bard College\\
-Annandale-on-Hudson, NY 12504
-\\
-\href{mailto:friosavi@levy.org}{friosavi@levy.org}
+Universidad Privada Boliviana\\
+La Paz, Bolivia\\
+
+\href{mailto:f.rios.a@gmail.com}{f.rios.a@gmail.com}
 }
  
  
@@ -146,27 +146,21 @@ Annandale-on-Hudson, NY 12504
 
 This paper introduces \texttt{cre}, a Stata prefix command designed to
 simplify the implementation of Correlated Random Effects (CRE) models,
-following the Mundlak (1978) approach, for a wide range of linear and
-nonlinear estimation commands. Standard Fixed Effects (FE) estimators,
-while consistent under unobserved heterogeneity, cannot identify
-coefficients for time-invariant variables. Standard Random Effects (RE)
-estimators can identify such coefficients but rely on the strong, often
-violated, assumption that individual effects are uncorrelated with
-regressors. CRE models offer a pragmatic middle ground, providing
-FE-equivalent estimates for time-varying coefficients in linear models
-while still allowing identification of time-invariant effects.
-Crucially, the CRE approach extends readily to many nonlinear models
-where FE estimators are complex, inconsistent (due to the incidental
-parameter problem), or unavailable. The cre command facilitates this by
-automatically generating the required group means of time-varying
-regressors and adding them to the specified model, handling both
-balanced and unbalanced panels correctly based on established methods
-\citep{wooldridge2019}. It integrates seamlessly with Stata's factor
-variables and post-estimation commands like margins, enhancing its
-utility for applied researchers. This paper details the theoretical
-underpinnings, contrasts the approach with alternatives, explains the
-command's syntax and features, provides empirical examples, and presents
-simulation results demonstrating its performance for nonlinear models.
+following the \citet{mundlak1978pooling} approach, for a wide range of
+linear and nonlinear estimation commands. Standard Fixed Effects (FE)
+estimators, while consistent under unobserved heterogeneity, cannot
+identify coefficients for time-invariant variables. Standard Random
+Effects (RE) estimators can identify such coefficients but rely on the
+strong, often violated, assumption that individual effects are
+uncorrelated with regressors. CRE models offer an empirical middle
+ground, providing FE-equivalent estimates for time-varying coefficients
+in linear models while still allowing identification of time-invariant
+effects. The \texttt{cre} command facilitates this by automatically
+generating the required group means of time-varying regressors and
+adding them to the specified model, handling both balanced and
+unbalanced panels. It also integrates seamlessly with Stata's factor
+variables and post-estimation commands like \texttt{margins}, enhancing
+its usefulness for applied researchers.
 
 \keywords{\inserttag, Mundlak approach, correlated random effects, panel
 data, nonlinear models, Stata, prefix command}
@@ -182,91 +176,97 @@ models. However, both have limitations. FE models provide consistent
 estimates by eliminating time-invariant unobserved factors, but
 consequently, cannot estimate the effects of observed time-invariant
 variables (e.g., gender, race, baseline characteristics), which are
-often of substantive interest \citep{wooldridge2010econometric}. RE
-models estimate effects for both time-varying and time-invariant
-variables but require the strong assumption that the unobserved
-individual-specific effects are uncorrelated with the explanatory
-variables---an assumption frequently questioned in practice
-\citep{wooldridge2019}. Violating this assumption leads to inconsistent
-RE estimates.
+often of substantive interest. RE models estimate effects for both
+time-varying and time-invariant variables but require the strong
+assumption that the unobserved individual-specific effects are
+uncorrelated with the explanatory variables---an assumption frequently
+questioned in practice \citep{wooldridge2019}. Violating this assumption
+leads to inconsistent estimates.
 
-A third, less commonly implemented approach, offers a compelling
-alternative: Correlated Random Effects (CRE) models. Originating with
-\citet{mundlak1978pooling} and further developed by
+A third, less commonly implemented approach, offers a simple yet
+feasible alternative: Correlated Random Effects (CRE) models. First
+introduced by \citet{mundlak1978pooling} and further developed by
 \citet{chamberlain1982multivariate}, the CRE framework explicitly models
 the correlation between the unobserved individual effects and the
-explanatory variables. Specifically, the Mundlak (1978) approach, which
-is the focus here, assumes the individual effect is a linear projection
-of the \emph{individual means} of the time-varying covariates, plus a
-random component uncorrelated with the covariates. This specification
-achieves two key goals: (1) In linear models, it yields estimates for
-time-varying coefficients that are identical to the FE estimator, thus
-providing consistency even when the RE assumption fails. (2) It allows
-for the estimation of coefficients on time-invariant variables.
+explanatory variables. Specifically, the \citet{mundlak1978pooling}
+approach, which is the focus here, assumes the individual effect can be
+written as a linear projection of the \emph{individual-level-means} of
+the time-varying covariates, plus a random component uncorrelated with
+the covariates. Thus, to avoid the problems related to the RE
+assumption, the Mundlak approach simply augments the model specification
+by including the means of the time-varying covariates as additional
+regressors. By doing so, CRE can estimate the effects of time-invariant
+variables while also providing consistent estimates for time-variant
+coefficients that are identical to the FE estimator in linear models.
 
 Perhaps the most significant advantage of the Mundlak CRE approach lies
 in its applicability to \textbf{nonlinear models} (e.g., probit, logit,
-tobit, Poisson). For many such models, FE estimation is either
+tobit, Poisson). For such models, FE estimation is either
 computationally intensive, suffers from the incidental parameter problem
 (leading to inconsistency as T remains small), or simply does not exist
 \citep{wooldridge2019}. The CRE approach provides a practical and
-consistent estimation strategy by augmenting the model specification
-with the means of time-varying covariates before applying the standard
-pooled (cross-sectional) estimator, typically with cluster-robust
-standard errors \citep{wooldridge2010econometric, wooldridge2019}.
+consistent estimation strategy that can be easily applied to such cases,
+typically with cluster-robust standard errors
+\citep{wooldridge2010econometric, wooldridge2019} for statistical
+inference.
 
 Despite these benefits, CRE models are not as widely used as FE or RE,
-partly due to perceived implementation hurdles and lack of readily
+partly due to perceived implementation hurdles, and lack of readily
 available, flexible software tools. While Stata recently introduced a
-\texttt{cre} option for \texttt{xtreg} (as of StataNow, June 25, 2024),
-its use is restricted to linear models estimated by \texttt{xtreg}.
+\texttt{cre} option for \texttt{xtreg}
+\citep[\texttt{xtreg,\ cre}]{stata19}, its use is restricted to linear
+models estimated by \texttt{xtreg}. On the other hand,
 Community-contributed commands like \texttt{mundlak} \citep{perales2013}
-and \texttt{xthybrid} \citep{schunck2017} exist; however,
-\texttt{mundlak} focuses on linear models, and \texttt{xthybrid}
-implements a related but distinct ``hybrid model'' within a generalized
-mixed-effects framework, which may add complexity compared to the direct
-Mundlak specification.
+and \texttt{xthybrid} \citep{schunck2017} exist. While \texttt{mundlack}
+focuses primarly on linear model, \texttt{xthybrid} is the closest to
+the principles presented here in that it is a wrapper to \texttt{meglm},
+allowing the application of CRE approach to any nonlinear model that are
+supported by \texttt{meglm}, extending the CRE estimator to the
+generalized mixed-effects framework.\footnote{The command
+  \texttt{xthybrid} goes beyond the Mundlak approach, focusing on the
+  estimation of within and between effects, random-slope models, in
+  addition to the standard Mundlak approach or CRE.}
 
-This paper introduces the \texttt{cre} command, a \textbf{prefix
-command} in Stata, designed to bridge this gap. Its primary contribution
-is to provide a simple, flexible, and unified framework for estimating
-Mundlak-style CRE models across a wide range of Stata estimation
-commands, both linear and nonlinear. Key features include:
+In contrast to \texttt{xthybrid}, \texttt{cre} is not a wrapper for any
+specific command. Instead, it is a \textbf{prefix command} that can be
+used with most Stata estimation commands (both official and
+community-contributed) to implement the Mundlak CRE approach. It does so
+by identifying all time-varying regressors in the model, as well as the
+relevant sample restrictions imposed by the user, to compute
+individual-specific means for all time varying covariates, and adding
+them to the original model specification. This flexibility provides the
+following advantages:
 
 \begin{itemize}
 \tightlist
 \item
-  \textbf{Prefix Functionality:} \texttt{cre} works seamlessly with most
-  Stata estimation commands (official and community-contributed).
+  Allows researchers to apply the Mundlak CRE approach to a wide range
+  of models, including linear and nonlinear specifications, without
+  being limited to specific commands or model types.
 \item
-  \textbf{Automatic Mean Generation:} It automatically identifies
-  time-varying regressors, computes their individual-specific means, and
-  adds them to the model specification.
+  Automatically generates the necessary constructed variables (mean
+  variables) to be included in the model.
 \item
-  \textbf{Unbalanced Panel Support:} It correctly handles unbalanced
-  panels by calculating means using only the available observations for
-  each individual within the estimation sample, following the approach
-  validated by \citet[see specific discussion in Section
-  2.1]{wooldridge2019}.
+  It correctly handles unbalanced panels by calculating means using only
+  the available observations for each individual within the estimation
+  sample, following the approach described by \citet{wooldridge2019}.
 \item
-  \textbf{Integration:} It fully supports Stata's factor variables and
-  integrates smoothly with post-estimation commands \texttt{margins} for
-  computing average partial effects (APEs).
+  It fully supports Stata's factor variables (\texttt{i.}, \texttt{c.}
+  and \texttt{l.}).
+\item
+  and last but not least, it integrates smoothly with post-estimation
+  commands \texttt{margins}, if the original command allows, for the
+  estimation average partial effects (APEs).
 \end{itemize}
 
-This paper proceeds as follows: Section 2 reviews the theoretical
-framework for CRE models in linear and nonlinear settings, discussing
-unbalanced panels, standard errors, APE calculation, and interaction
-terms. Section 3 describes the syntax and usage of the \texttt{cre}
-command. Section 4 presents empirical examples comparing \texttt{cre}
-with alternative estimators for both linear and nonlinear models using a
-standard dataset. Section 5 provides Monte Carlo simulation evidence on
-the performance of the CRE approach for nonlinear models. Section 6
-concludes. This paper focuses exclusively on static models;
-\textbf{dynamic panel models} (incorporating lagged dependent variables)
-present additional complexities (e.g., initial conditions problem
-\citep{wooldridge2010econometric}) and are outside the scope of the
-current \texttt{cre} command and this discussion.
+This paper proceeds as follows: Section~\ref{sec-2} reviews the
+theoretical framework for CRE models in linear and nonlinear settings,
+discussing unbalanced panels and estimation of standard errors, and
+average partial effects estimation. Section~\ref{sec-3} presents the
+\texttt{cre} command. Section 4 provides an empirical example.
+Section~\ref{sec-5} provides Monte Carlo simulation evidence on the
+performance of the CRE approach for nonlinear models.
+Section~\ref{sec-6} concludes.
 
 \section{Theoretical Framework}\label{sec-2}
 
@@ -294,17 +294,15 @@ transforming the data (e.g., demeaning) to eliminate \(\alpha_i\),
 yielding consistent estimates for \(\beta_x\). However, this
 transformation also eliminates \(z_i\), making \(\beta_z\) unidentified.
 
-The \citet{mundlak1978pooling} CRE approach offers a solution by
-explicitly modeling the correlation between \(\alpha_i\) and the
-time-varying covariates \(x_{i,t}\). It assumes that the expectation of
-\(\alpha_i\) conditional on the individual means of \(x_{i,t}\) is
-linear:\footnote{An alternative approach to Mundlak's is the one
-  proposed by \citet{chamberlain1982multivariate}, which allows for a
-  more flexible specification of the individual effects, where all
-  realizations of the time-varying covariates are included in the model.
-  This approach is more complex and computationally intensive,
-  especially for unbalanced panels, and is not implemented in the
-  \texttt{cre} command.}
+The \citet{mundlak1978pooling} CRE approach offers a solution to this
+problem by explicitly modeling the correlation between \(\alpha_i\) and
+the time-varying covariates \(x_{i,t}\). Specifically, it assumes that
+\(\alpha_i\) can be written as a linear projection of individual means
+of \(x_{i,t}\):\footnote{As described in \citet{rios2015}, it is
+  possible to implement a within-transformation using an iterative
+  demeaning process until convergence. More recently, StataNow 18.5 also
+  released a command that allows for the estimation of M-way fixed
+  effects using a similar (yet more efficient) approach.}
 
 \[E[\alpha_i | \bar x_{i}] = \gamma_0 + \bar x_{i}\gamma\]
 
@@ -316,113 +314,316 @@ observed. This allows us to write \(\alpha_i\) as:
 \begin{equation}\phantomsection\label{eq-cre-2}{\alpha_i = \gamma_0 + \bar x_{i}\gamma + v_i
 }\end{equation}
 
-where \(v_i\) is a random component defined such that
+where \(v_i\) is a random component such that
 \(E[v_i | \bar x_{i}] = 0\). More explicitly, the Mundlak approach
-assumes that \(v_i\) is uncorrelated with the \emph{full history} of
-covariates \(x_{i} = (x_{i,1}, ..., x_{i,T_i})\), not just the mean
-\(\bar x_i\). Substituting Equation~\ref{eq-cre-2} into
-Equation~\ref{eq-cre-1} yields the CRE model specification:
+assumes that once we control for \(\bar x_{i}\), \(v_i\) is also
+uncorrelated with the \emph{full history} of covariates
+\(x_{i} = (x_{i,1}, ..., x_{i,T_i})\). Substituting
+Equation~\ref{eq-cre-2} into Equation~\ref{eq-cre-1} yields the CRE
+model specification:
 
 \begin{equation}\phantomsection\label{eq-cre-final}{y_{i,t} = (\beta_0 + \gamma_0) + x_{i,t}\beta_x + z_{i}\beta_z + \bar x_{i}\gamma + v_i + u_{i,t}
 }\end{equation}
 
-This augmented model can be estimated using pooled OLS or, more
-appropriately, using a RE estimator on the augmented specification. The
-composite error term \(\mu_{i,t} = v_i + u_{i,t}\) is uncorrelated with
-\(x_{i,t}\), \(z_i\), and \(\bar x_{i}\) by construction (under the
-Mundlak assumptions).
+This augmented model can be estimated using pooled OLS or a RE
+estimator. The composite error term \(\mu_{i,t} = v_i + u_{i,t}\) is
+uncorrelated with \(x_{i,t}\), \(z_i\), and \(\bar x_{i}\) by
+construction (under the Mundlak assumptions), but will be correlated
+across time for the same individual. This correlation can be accounted
+for using cluster-robust standard errors at the individual level, or by
+applying the RE estimator.
 
-\textbf{Key Properties:} 1. The estimator for \(\beta_x\) from
-Equation~\ref{eq-cre-final} is numerically identical to the FE estimator
-in the linear case \citep[ chap
-10]{mundlak1978pooling, wooldridge2010econometric}.!! 2. The model
-allows estimation of \(\beta_z\), the coefficients on time-invariant
-variables. 3. A test of \(H_0: \gamma = 0\) provides a robust test for
-correlation between \(\alpha_i\) and \(x_{i,t}\), effectively a
-Hausman-type test comparing FE and RE \citep{wooldridge2010econometric}.
+The CRE estimator has some important properties:
 
-\textbf{Handling Unbalanced Panels:}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  The estimator for \(\beta_x\) from Equation~\ref{eq-cre-final} is
+  numerically identical to the FE estimator in the linear case \citep[
+  chap 10]{mundlak1978pooling, wooldridge2010econometric} for all time
+  varying variables.
+\item
+  The model allows estimation of \(\beta_z\), the coefficients on
+  time-invariant variables.\footnote{Note that depending if the model is
+    estimated via pooled OLS or RE, the coefficients of the
+    time-invariant variables will be different.}
+\end{enumerate}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  A test of \(H_0: \gamma = 0\) provides a robust test for correlation
+  between \(\alpha_i\) and \(x_{i,t}\), effectively a Hausman-type test
+  comparing FE and RE \citep[pg
+  521,531]{wooldridge2010econometric, stata19}.
+\end{enumerate}
+
+As mentioned before, one caveat of the methodology is that, unless
+\(\nu_i\)=0 for every observation, \(\mu_{i,t}\) is correlated across
+time by construction. Because of this, standard errors of the estimated
+coefficients of interest have to be estimated with this into
+consideration. This could imply using clustered standard errors or using
+a GLS (RE estimator) \citep[Chapter 10, pg
+332]{wooldridge2010econometric}.
+
+\subsection{Handling Unbalanced
+Panels}\label{handling-unbalanced-panels}
+
+\subsubsection{Traditional Approach}\label{traditional-approach}
 
 A significant advantage of the Mundlak approach is its straightforward
-application to unbalanced panels. As shown by \citet[sec
-10.7.3]{wooldridge2019}, the individual means \(\bar x_i\) are simply
-calculated using the available \(T_i\) observations for each individual
-\(i\) present in the estimation sample. The estimation of
-Equation~\ref{eq-cre-final} then proceeds using the pooled data. This
+application to unbalanced panels. As shown by
+\citet{wooldridge2019introductory}, the individual means \(\bar x_i\)
+are simply calculated using the available \(T_i\) observations for each
+individual \(i\) present in the estimation sample.
+
+More specifically, for the case of panel data, the appropriate
+within-individual average for variable \(w_{ij}\) should be estimated
+as:
+
+\[\bar w_i = \frac{1}{T_i} \sum_{t=1}^T s_{i,t}w_{i,t}\]
+
+where \(s_{i,t}\) is an indicator variable that takes the value of 1 if
+all other the elements of the control variables are dependent variables
+are observed, and 0 if any of the variables are missing.
+
+The estimation of Equation~\ref{eq-cre-final} then proceeds using the
+pooled data, and using the within group averages as controls. This
 contrasts with the \citet{chamberlain1982multivariate} approach, which
 requires conditioning on \(x_i\) values from all periods and becomes
-complex with unbalanced data \citep{abrevaya2013}. While alternative
-approaches for unbalanced panels exist, particularly in dynamic contexts
-\citep{albarran2019correlated}, the use of simple individual means
-within the static Mundlak framework is well-established and consistent
-\citep{wooldridge2019}. The \texttt{cre} command implements this
-approach.
+complex with unbalanced data \citep{abrevaya2013}.
+
+\subsubsection{Alternative Approach}\label{sec-alternative}
+
+While the above approach is the most common, it is much simpler to
+leverage the use of regression analysis and the equivalence of using a
+dummy inclusion approach. This makes use of the advances in the
+estimation of fixed effect models as described in \citet{correia_2016},
+\citet{rios2015}, and more recently Stata's multiway fixed effects
+estimator (\citet{stata19}).
+
+In this framework, for each variable \(w_{ij}\), we simply estimate the
+following regression:
+
+\begin{equation}\phantomsection\label{eq-cre-analogy}{w_{i,t} = a^w_0 + \epsilon^w_i + \mu^w_{i,t}
+}\end{equation}
+
+Constraining the sample to \(s_{i,t} = 1\), and under the assumption
+that the \(E(\epsilon^w_i) = 0\). Under this assumption, \(a^w_0\) is
+equal to the grand mean of \(w_{ij}\).
+
+As is in the case of linear regression with dummies, it follows that
+\(\bar w_i = a_0 + \epsilon^w_i\). With this change, however, rather
+than including the within group mean \(\bar w_i\) in the model, we
+include the individual fixed effect \(\epsilon^w_i\) instead.\footnote{This
+  parallels a control function approach, where exogenous variables help
+  isolate an exogenous component via regression, and residuals control
+  for endogeneity. In the Mundlak CRE case, individual fixed effects
+  serve a similar role by capturing the component potentially correlated
+  with unobserved heterogeneity; thus, instead of residuals
+  \(\mu^2_{i,t}\), we include fixed effects \(\epsilon^w_i\) in the main
+  model} While less explored, this approach can be used to expand the
+Mundlak approach to cases with multiple dimensions, as shown in the
+appendix.
+
+\subsubsection{Other approaches}\label{other-approaches}
+
+It is important to notice that the simple CRE approach may not be valid
+for other contexts, such as the one described in \citet{albarran2019},
+for dynamic and autoregressive nonlinear models. In particular, the
+estimation of such problems is more difficult due to the ``initial
+conditions problem'', due to using a lag of the dependent variable as
+explanatory variable. In this case, the simple Mundlak framework is not
+valid. For those interested in this approach, the authors propose a
+methodology for the general nonlinear case, and a community contributed
+command \texttt{xtprobitunbal}, which implements the approach for probit
+models.
+
+\subsection{Correlated Random Effects Models - Multiple
+Dimensions}\label{correlated-random-effects-models---multiple-dimensions}
+
+One potential advantage of CRE-Mundlak estimation is that it can be
+easily extended to accommodate for multiple fixed effects/dimensions,
+specially in the case of balanced panels. In the standard case of panel
+data, for example, one may be interested in controlling for both
+individual and time fixed effects. However, in cases with nested data,
+such as students in schools, or patients in hospitals, one may also be
+interested in controlling for multiple levels of fixed effects.
+
+There are few papers discussing this extension. \citet{baltagi2023}
+focuses on formalizing the equivalence with two-way fixed effect
+estimation. More recently, \citet{baltagi2024} and \citet{yang2022},
+have extended this identity to the case of multidimensional fixed
+effects, albeit only for the case of balanced data (where there are the
+same number of observations for every combination of the fixed effects
+dimensions).
+
+Consider the following data generating process:
+
+\begin{equation}\phantomsection\label{eq-mcre-1}{y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + w_{t}\beta_w + \alpha_i + \tau_t + u_{i,t}
+}\end{equation}
+
+and that the data is balanced. That is that every combination of \(i\)
+and \(t\) is observed, and they are all the same size (1 for panel
+data).
+
+In addition to the components from Equation~\ref{eq-cre-1},
+Equation~\ref{eq-mcre-1} also considers individual-invariant variables
+\(z_{t}\), as well as effects that only vary across time, but not
+individuals \(\tau_t\). As before, pool OLS or random effects estimators
+are only consistent if the individual-specific (\(\alpha_i\)) and
+time-specific (\(\tau_t\)) effects are uncorrelated with the explanatory
+variables. Following the same principle, \citet{baltagi2024} and
+\citet{yang2022} suggest that CRE could also be expanded to multiple
+dimensions, and that, if the data is balanced, one simply needs to
+include the group means of every variable respect to each FE dimension.
+In other words, they expand the analogy propose by
+\citet{mundlak1978pooling}, but for every dimension:
+
+\begin{equation}\phantomsection\label{eq-mcre-md}{\begin{aligned}
+\alpha_i &= \gamma_0 + \bar x_{i}\gamma_x  + v_i \\
+\theta_t &= \theta_0 + \bar x_{t}\theta_x  + v_t
+\end{aligned}
+}\end{equation}
+
+As noted in \citet{wooldridge2019}, while this procedure is
+straighforward for the case of panel data, the same expression is not
+valid when the data is unbalanced, and units \(i\) are observed
+different number of periods. Because of this, simply including the group
+means of the variables in the model does not fully control for the
+correlation between the unobserved effects and the explanatory
+variables. This is similar to the problem of using the within
+transformation for the estimation of M-way fixed effects
+\citep[\texttt{areg}]{rios2015, correia_2016, stata19}\footnote{As
+  described in \citet{rios2015}, it is possible to implement a
+  within-transformation using an iterative demeaning process until
+  convergence. More recently, StataNow 18.5 also released a command that
+  allows for the estimation of M-way fixed effects using a similar (yet
+  more efficient) approach.}.
+
+In the case of unbalanced data, the alternative approach described in
+Section~\ref{sec-alternative} is more appropriate. Thus, each
+independent variable is regressed on both sets of fixed effects:
+
+\begin{equation}\phantomsection\label{eq-mcre-analogy}{
+x_{i,t} = a^x_0 + \epsilon^x_i  +\epsilon^x_t+ \mu^x_{i,t}
+}\end{equation}
+
+Using the sample where all data is observed (\(s_{i,t} = 1\)), and
+impossing the condition \(E(\epsilon^x_i) = 0\) and
+\(E(\epsilon^x_t) = 0\). It follows that \(a^x_0\) is the overall mean
+of the variable \(x_{i,t}\), and \(\epsilon^x_i\) and \(\epsilon^x_t\)
+are the individual and time fixed effects, respectively. \(\mu^x_{i,t}\)
+is now uncorrelated with \(x_{i,t}\).
+
+Interestingly, if the panel data is balanced, \(a^x_0 + \epsilon^x_i\)
+and \(a^x_0 + \epsilon^x_t\) are equivalent to the group means of the
+variables. However, that is not the case when the data is unbalanced.
+
+With this, we can write the CRE model as:
+
+\begin{equation}\phantomsection\label{eq-mcre-final}{y_{i,t} = \beta_0 + x_{i,t}\beta_x + z_{i}\beta_z + w_{t}\beta_w + \gamma_0 +\hat \epsilon^x_i\gamma +\hat\epsilon^x_t\delta+ v_i + v_t + u_{i,t}
+}\end{equation}
+
+where \(v_{i}\) and \(v_{t}\) are the individual and time error term
+that are uncorrelated with \(x_{i,t}\). As shown by \citet{baltagi2024}
+and \citet{yang2022}, this can be estimated via pooled OLS or GLS (RE
+estimator), with the estimates for \(\beta_x\) being equivalent to the
+MW-FE estimates.
+
+Thus, in general, it is feasible to extend the Mundlak approach to
+multiple dimensions, following the next steps:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Define the sample that is common to all dimensions and variables
+  \(s_{i,t}\).
+\item
+  Estimate the group pseudo-averages for each dimension
+  \(\epsilon^w_k\), and for all variables.
+\item
+  Include the new variables in the main model, and estimate that model
+  using OLS or GLS.
+\end{enumerate}
 
 \subsection{Nonlinear Models and CRE}\label{sec-2-2}
 
 The CRE approach becomes particularly valuable for nonlinear models
-where FE estimation faces challenges. Consider a general nonlinear model
-where the conditional expectation or relevant latent variable depends on
-individual effects:
+where FE estimation faces challenges, as has been shown in
+\citet{wooldridge2019} and \citet{schunck2017}. \citet{wooldridge2019}
+discusses how the Mundlak CRE approach extends naturally to nonlinear
+models, exploring more flexible cases, such as including interactions of
+the mean variables with time dummies, as well as suggesting the
+specifications for approximations to Random coefficients models.
+\citet{schunck2017} also discusses the Mundlak approach, implementing it
+in the \texttt{xthybrid} command, which allows for the estimation of CRE
+models, among others, in nonlinear settings withing the generalized
+linear mixed-effects framework.
 
-\[E[y_{i,t} | x_{i,t}, z_i, \alpha_i] = g(x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i)\]
+Consider a general nonlinear model where the relevant latent variable
+depends on individual effects:
 
-or a latent variable model:
 \begin{equation}\phantomsection\label{eq-nl-1}{y^*_{i,t} = x_{i,t}\beta_x + z_{i}\beta_z + \alpha_i
 }\end{equation}
 
 where \(y_{i,t}\) is observed based on \(y^*_{i,t}\) (e.g.,
-\(y_{i,t} = 1(y^*_{i,t} + u_{i,t} > 0)\) for probit).
+\(y_{i,t} = 1(y^*_{i,t} + u_{i,t} > 0)\) for binomial models).
 
 Including dummy variables for \(\alpha_i\) in nonlinear models generally
-leads to inconsistent estimates for \(\beta_x\) and \(\beta_z\) as
-\(N \rightarrow \infty\) with fixed \(T\), due to the incidental
-parameter problem \citep{neyman1948consistent}. While consistent FE
-estimators exist for some specific models (e.g., conditional logit, FE
-Poisson), they are unavailable for many others (e.g., probit, tobit,
-ordered models).
+leads to inconsistent estimates for \(\beta_x\) and \(\beta_z\) due to
+the incidental parameter problem \citep{lancaster2000, neyman1948}.
+While consistent FE estimators exist for some specific models (e.g.,
+conditional logit, FE Poisson), they are unavailable for many others
+(e.g., probit, tobit, ordered models).
 
-\citet[sec 10.7.3]{wooldridge2019} and \citet[chap
-15.8]{wooldridge2010econometric} demonstrate that the Mundlak CRE
-approach extends naturally to these cases. We maintain the assumption
-from Equation~\ref{eq-cre-2} that
-\(\alpha_i = \gamma_0 + \bar x_{i}\gamma + v_i\). The key modeling step
-is to specify the distribution of \(\alpha_i\) (or \(v_i\)) conditional
-on \((\bar x_i, z_i)\). A common and convenient assumption is:
+\citet{wooldridge2019} and \citet[chap 15.8]{wooldridge2010econometric}
+shows that the Mundlak CRE approach extends naturally to these cases. We
+maintain the assumption from Equation~\ref{eq-cre-2} that
+\(\alpha_i = \gamma_0 + \bar x_{i}\gamma_x + v_i\), which leads to the
+following augmented model:
 
-\[\alpha_i | \bar x_i, z_i \sim N(\gamma_0 + \bar x_{i}\gamma, \sigma^2_v)\]
+\[y^*_{i,t} = (\beta_0 + \gamma_0) + x_{i,t}\beta_x + z_{i}\beta_z + \bar x_{i}\gamma_x + v_i\]
 
-or simply treat \(v_i\) as part of the composite error term after
-substituting Equation~\ref{eq-cre-2} into the model's linear index:
+This specification of the latent variable can then be used in the
+nonlinear model of interest. The model can then be estimated by applying
+the standard pooled estimator (e.g., pooled probit, pooled Tobit) to the
+augmented specification. The parameters \(\beta_x\), \(\beta_z\), and
+\(\gamma_x\) are consistently estimated under appropriate assumptions
+for the specific nonlinear model, provided the conditional expectation
+or density is correctly specified \citep{wooldridge2019}. Cluster-robust
+standard errors at the individual level are required for statistical
+inference, although accounting for the the within correlation using GLS
+may also be appropriate.\footnote{This is, for example, what
+  \texttt{xthybrid} does in the framework of Generalized linear mixed
+  models.}
 
-\[y^*_{i,t} = (\beta_0 + \gamma_0) + x_{i,t}\beta_x + z_{i}\beta_z + \bar x_{i}\gamma + v_i\]
-
-The model can then be estimated by applying the standard pooled
-estimator (e.g., pooled probit, pooled Tobit) to the augmented
-specification including \(x_{i,t}\), \(z_i\), and \(\bar x_i\). The
-parameters \(\beta_x\), \(\beta_z\), and \(\gamma\) are consistently
-estimated under appropriate assumptions for the specific nonlinear
-model, provided the conditional expectation or density is correctly
-specified \citep{wooldridge2019}. Cluster-robust standard errors at the
-individual level are essential.
-
-This approach provides consistent estimates of the parameters (and
-subsequently, average partial effects) for both time-varying and
-time-invariant variables, even when traditional FE methods fail or are
-unavailable. \citet{wooldridge2023} utilizes this strategy for
+This approach provides consistent estimates of the parameters for both
+time-varying and time-invariant variables, even when traditional FE
+methods fail or are unavailable. A recent example of its application is
+the work of \citet{wooldridge2023}, where this strategy is used for
 estimating treatment effects with staggered adoption in nonlinear
 settings. The flexibility can be further increased by including
 interactions between \(\bar x_i\) and time dummies, or other variables,
-in the specification \citep{wooldridge2019}.
+in the specification \citep{wooldridge2019}. In my implementation of
+\texttt{cre}, I focus on the simplest Mundlack approach, however, more
+complex models can be estimated following \citet{wooldridge2019}.
 
 \subsection{Standard Errors and Hypothesis Testing}\label{sec-2-3}
 
-Estimating Equation~\ref{eq-cre-final} involves using generated
-regressors (\(\bar x_i\)). While the point estimates for \(\beta_x\) in
-the linear model are identical to FE, the standard errors are not
-necessarily the same, even asymptotically, because the inclusion of
-\(\bar x_i\) changes the model structure compared to the demeaning
-process of FE.
+As described above, estimating a model via CRE, as in
+Equation~\ref{eq-cre-final}, involves using generated regressors
+(\(\bar x_i\)). While the point estimates for \(\beta_x\) in the linear
+model are identical to FE, the standard errors are not necessarily the
+same, even asymptotically, because the inclusion of \(\bar x_i\) changes
+the model structure compared to the demeaning process of FE, affecting
+the new compounded error and degrees of freedom of the model.
+Specifically, unless \(\bar x_i\) can fully explain the unobserved
+component \(\alpha_i\) (thus making \(\nu_i=0\) ), the procedure
+introduces intra group correlation in the model.
 
 For \textbf{linear models}, \citet[chap
 10.5.3]{wooldridge2010econometric} shows that using the standard RE
@@ -432,10 +633,7 @@ equivalent to the usual FE standard errors. Alternatively, estimating
 Equation~\ref{eq-cre-final} by pooled OLS and using cluster-robust
 standard errors (clustered at the individual level \(i\)) also yields
 asymptotically valid standard errors, which are equivalent to the
-clustered FE standard errors. The \texttt{cre} command, being a prefix,
-allows the user to choose the estimation command (e.g., \texttt{regress}
-or \texttt{xtreg,\ re}) and appropriate standard error options (e.g.,
-\texttt{vce(cluster\ id)}).
+clustered FE standard errors.
 
 For \textbf{nonlinear models}, the standard approach is to estimate the
 augmented model using the pooled maximum likelihood estimator (e.g.,
@@ -443,7 +641,9 @@ augmented model using the pooled maximum likelihood estimator (e.g.,
 errors clustered at the individual level (\texttt{vce(cluster\ id)}).
 This accounts for the within-individual correlation induced by \(v_i\)
 (and potentially \(u_{i,t}\) if serially correlated) \citep[ chap
-15.8]{wooldridge2010econometric}.
+15.8]{wooldridge2010econometric}. Alternatively, RE estimators could
+also be applied to the augmented model, although this is less common in
+practice.
 
 A more robust, though computationally intensive, alternative for
 obtaining standard errors, especially if the distributional assumptions
@@ -451,133 +651,143 @@ about \(v_i\) or \(u_{i,t}\) are uncertain, is to \textbf{bootstrap} the
 entire estimation process. This involves resampling individuals
 (clusters) with replacement, recalculating the \(\bar x_i\) within each
 bootstrap sample, estimating the augmented model, and obtaining the
-distribution of the coefficients across bootstrap replications \citep[
-suggests this]{wooldridge2010econometric}. This can be achieved in Stata
-by using the \texttt{bootstrap} prefix \emph{before} the \texttt{cre}
-prefix: \texttt{bootstrap:\ cre,\ abs(idvar)\ ...}.
+distribution of the coefficients across bootstrap replications.
+
+With multiple dimensions, the literature says very little regarding the
+correct estimaton of standard errors. Because using multiple dimensions
+can also introduce within-groups correlation, it may be that one needs
+to control for multiple levels of clustering, or use Bootstrap methods
+to at least account for one dimension adjustments. This is an area that
+requires further research, but the implemention is left as an
+experimental feature.
 
 \subsection{Calculating Average Partial Effects (APEs)}\label{sec-2-4}
 
-In nonlinear models, the estimated coefficients typically do not
-directly represent the marginal effect of a covariate on the outcome
-variable. Instead, Average Partial Effects (APEs) or Marginal Effects at
-Means (MEMs) are usually reported. A significant practical advantage of
-the CRE approach implemented via \texttt{cre} is the ease of calculating
-APEs.
+The calculation of average partial effects in linear models is straight
+forward. Because the CRE approach provides consistent estimates that are
+equivalent to the FE estimator, the partial effects can be calculated
+directly from the estimated coefficients as is usual. In nonlinear
+models, the estimated coefficients typically do not directly represent
+the partial effect of a covariate on the outcome variable, specially in
+the presence of interactions of polynomials. In this case, Average
+Partial Effects (APEs) or Marginal Effects at Means (MEMs) are necessary
+to better understand the results of a model. A significant practical
+advantage of the CRE approach implemented via \texttt{cre} is the
+relative ease of calculating APEs.
 
-Because \texttt{cre} explicitly adds the mean variables (\(\bar x_i\))
-to the model specification before the core estimation command is
-executed, the resulting estimation output (\texttt{e()}) contains all
-necessary coefficients (\(\beta_x, \beta_z, \gamma\)) and the
-variance-covariance matrix. Consequently, Stata's powerful
-\texttt{margins} command can be used directly after estimation to
-compute APEs.
-
-For a time-varying variable \(x_{k,it}\) (continuous):
-
-\begin{verbatim}
-cre, abs(idvar) ... : /* estimation command */ ...
-margins, dydx(x_k) // Calculates dE[y]/dx_k, averaged over observations
-\end{verbatim}
-
-For a time-invariant variable \(z_{g,i}\) (continuous):
-
-\begin{verbatim}
-cre, abs(idvar) ... : /* estimation command */ ...
-margins, dydx(z_g) // Calculates dE[y]/dz_g, averaged over observations
-\end{verbatim}
-
-The \texttt{margins} command correctly accounts for the nonlinear
-functional form and computes standard errors using the delta method
-based on the clustered VCE from the estimation step. This seamless
-integration simplifies the interpretation of results from nonlinear CRE
-models.
-
-\subsection{Interaction Terms}\label{sec-2-5}
-
-Researchers often want to include interaction terms in their models as
-well as categorical variable. Methodologogically, adding interactions
-and categorical variables to the CRE model is straightforward, because
-there are no changes to the model assuptions. In other words,
-interactions and categorical variables should be treated as any other
-variable in the model. From a programatically perspective, \texttt{cre}
-deals with this cases using the following process.
+Based on \citet{wooldridge2019} (section 5), the APE for a variable
+\(x_{i,t}\) in a nonlinear model with unobserved heterogneity can be
+calculated as follows:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  All interactions and categorical variables in the main model are
-  expanded (all interactiions appear explicity in the independent
-  variable list).
-\item
-  For the case of categorical variables and interactions, temporary
-  variables are created.
-\item
-  \texttt{cre} then proceeds to create the variable means, for all
-  variables including the temporary ones.
-\item
-  As usual, all variable means are added to the model, along with the
-  original variables, and the model is estimated.
+  Define the outcome Average Structural Function (ASF) for the model,
+  as:
 \end{enumerate}
 
-Consider an interaction between a time-varying variable \(x_{1,it}\) and
-a time-invariant variable \(z_{1,i}\):
+\[ASF(x_{i,t}) = E_{c_i}[m_t(x_{i,t}, c_i)]\]
 
-\begin{verbatim}
-cre, abs(idvar): /* estimation command */ y x1 x2 c.x1#c.z1 z1 z2 ...
-\end{verbatim}
+which eliminates the unobserved heterogeneity \(c_i\) from the model, by
+averaging it out.
 
-Here, \texttt{cre} will identify \texttt{x1} and \texttt{x2} as
-time-varying and create their means (\texttt{\_m\_x1},
-\texttt{\_m\_x2}). It will also identify the \emph{interaction term}
-\texttt{c.x1\#c.z1} as potentially time-varying (since \(x_1\) varies
-over time). It will then compute the individual mean of this interaction
-term, \(\overline{(x_{1,it} \times z_{1,i})}\), and include it as an
-additional regressor (\texttt{\_m\_x1\_z1} or similar).
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{1}
+\tightlist
+\item
+  When estimating nonlinear models using the CRE approach, rather
+  averaging over the unobserved heterogeneity \(c_i\), one averages over
+  the auxiliary terms \(\bar x_i\). Specifically we would have:
+\end{enumerate}
 
-Similarly, categorical variables can be included in the model:
+\[ASF(x_{i,t}) = \frac{1}{N_s} \sum_{i,t} [ m_t(x_{i,t}, \bar x_i)]\]
 
-\begin{verbatim}
-cre, abs(idvar): /* estimation command */ y x1 x2 i.x3 ...
-\end{verbatim}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\setcounter{enumi}{2}
+\tightlist
+\item
+  The APE for a variable \(x_{i,t}\) is then calculated as the
+  derivative of the ASF with respect to \(x_{i,t}\):
+\end{enumerate}
 
-\texttt{cre} will create means for \texttt{x1}, \texttt{x2}, and the
-create means for all levels of \texttt{x3} excluding the base level.
+\[APE(x_{i,t}) = \frac{\partial ASF(x_{i,t})}{\partial x_{i,t}} = \frac{1}{N_s} \sum_{i,t} \frac{\partial m_t(x_{i,t}, \bar x_i)}{\partial x_{i,t}}\]
 
-Post-estimation commands like \texttt{margins} can then be used to
-compute marginal effects or contrasts involving these interactions:
+where \(N_s\) is the number of observations in the estimation sample.
 
-\begin{verbatim}
-margins, dydx(x1) at(z1=(0 1)) // Effect of x1 at different levels of z1
-margins, dydx(x1) dydx(z1) // Check interaction effect interpretation
-\end{verbatim}
-
-This works because we are interested in estimating the marginal effects
-of the main variables of interest, after integrating over the unobserved
-errors, which are assumed fixed. In the Mundlack specification
-perspective, this implies that created variables, like mean of \(x\), is
-considered fixed when \(x\) changes.
-
-The \texttt{cre} command attempts to create intuitive names for the
-generated mean variables corresponding to interactions, but complex
-interactions might result in generic names (\texttt{\_v\#}) if the
-generated name exceeds Stata's variable name length limits. The list of
-generated mean variables is stored in \texttt{e(m\_list)} for
-inspection.
+In other words, when we apply the CRE approach, the auxiliary terms
+\(\bar x_i\) are treated as fixed, and independent of \(x_{i,t}\). This
+is the same as assuming other control variables remain fixed when
+focusing on the impact of a single variable. On this point,
+\citet{wooldridge2019} argues that standard errors for this expression
+can be difficult to obtain. However, Stata's \texttt{margins} command
+provides a convenient way to calculate APEs and their standard errors
+based on the delta method.
 
 \section{\texorpdfstring{\texttt{cre} Command: Implementation in
 Stata}{cre Command: Implementation in Stata}}\label{sec-3}
 
-The \texttt{cre} command is implemented as a Stata prefix command. This
-means it is placed before a standard Stata estimation command to modify
-its behavior. \texttt{cre} intercepts the command, identifies the
-variables and sample, calculates the necessary individual means for
-time-varying covariates, adds these means to the variable list, and then
-executes the original estimation command with the augmented
-specification.
+\subsection{\texorpdfstring{Overview: how \texttt{cre}
+works}{Overview: how cre works}}\label{overview-how-cre-works}
 
-The syntax is:
+Up to this point, we have discussed the theoretical framework for the
+CRE approach, its advantages, and how it can be applied to both linear
+and nonlinear models. The \texttt{cre} command is designed to facilitate
+the implementation of this approach in Stata, allowing users to easily
+apply the Mundlak CRE method to a wide range of estimation commands. The
+process behind \texttt{cre} involves several key steps:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Identification of dependent and independent variables: \texttt{cre},
+  as a prefix command, intercepts the estimation command to identify the
+  dependent variable, independent variables, and any sample restrictions
+  (e.g., \texttt{if}, \texttt{in}, \texttt{weight}). On top of that, it
+  also identifies the variables specified in the \texttt{abs()} option,
+  which are used to calculate the individual means, and may also modify
+  the working sample.
+\item
+  Calculation of psudo-means: For each independent variable in the
+  model, \texttt{cre} centers the variable around its ``grand mean'', so
+  that the new auxiliary variable has a mean of zero. This is then
+  plugged in into a regression model that only includes the fixed
+  effects (Equation~\ref{eq-mcre-analogy}). The estimated fixed effects
+  are used as the psudo-means/auxiliary variables. If there is no
+  variation left in the variable, after the fixed effects are absorbed,
+  the psudo-mean are excluded from the model. This allows for the
+  original variable to remain in the model. If the variable list
+  includes interaction terms or other type of factor notation (e.g.,
+  \texttt{i.}, \texttt{c.}, etc), the expression is expanded and a
+  temporary variable created to estimate their psudo-means.
+\item
+  Estimation of the augmented model: After calculating the individual
+  means are finalized, \texttt{cre} augments the original model
+  specification by adding the calculated means as additional independent
+  variables. It then executes the original estimation command with the
+  modified variable list, and the originally specified options (e.g.,
+  \texttt{vce(cluster\ id)} for clustered standard errors).
+\item
+  Post-estimation: Because there is no modification to the original
+  estimation command, any post-estimation commands can be used as usual.
+  This includes commands like \texttt{margins} for calculating average
+  partial effects (APEs).
+\end{enumerate}
+
+In other words, \texttt{cre} acts as a flexible prefix command that
+allows users to apply the Mundlak CRE approach to a wide range of
+estimation commands in Stata, without requiring significant changes to
+their existing workflows. It automates the process of calculating
+individual means and augmenting the model specification, while still
+allowing for the use of standard Stata estimation and post-estimation
+commands.
+
+\subsection{\texorpdfstring{Syntax and Usage of
+\texttt{cre}}{Syntax and Usage of cre}}\label{syntax-and-usage-of-cre}
+
+The syntax of the command is:
 
 \texttt{cre,\ abs(varlist)\ {[}options{]}\ :\ estimation\_command\ depvar\ {[}indepvars{]}\ {[}if{]}\ {[}in{]}\ {[}weight{]}\ {[},\ est\_options{]}}
 
@@ -589,12 +799,11 @@ The syntax is:
   \texttt{abs(varlist)}: Specifies the variable(s) identifying the
   groups (individuals) for which means should be calculated. Typically,
   this is the panel identifier variable (e.g., \texttt{abs(personid)}).
-  Multiple variables can also be specified.{[}\^{} The command also
-  allows for the inclusion of multiple variables in the \texttt{abs()}
-  option, allowing for a psude Multi-way Mundlak specification. While
-  this is numerically equivalent to specifying multple fixed effects,
-  the theoretical justification for this is not standard. Nevertheless,
-  it is left as an experimental feature.{]}
+  Multiple variables can also be specified.{[}\^{} We provide this as an
+  experimental option to allow for a psudo-Multi-way Mundlak
+  specification. While this is numerically equivalent to specifying
+  multiple fixed effects in linear models, the theoretical justification
+  for this is limited, specially for non-linear models.{]}
 \end{itemize}
 
 \textbf{Optional Options:}
@@ -602,33 +811,29 @@ The syntax is:
 \begin{itemize}
 \item
   \texttt{prefix(str)}: Sets the prefix for the generated mean
-  variables. The default is \texttt{\_m}. For a variable \texttt{x}, the
-  mean variable will be named \texttt{\_m\_x}. If multiple variables are
-  specified in \texttt{abs()}, prefixes like \texttt{\_m1\_},
-  \texttt{\_m2\_} might be used, but the primary use case involves one
-  \texttt{abs()} dimension. Check \texttt{e(m\_list)} for generated
-  names.
+  variables. The default is \texttt{m1\_}. For a variable \texttt{x},
+  the mean variable will be named \texttt{m1\_x}. If multiple variables
+  are specified in \texttt{abs()}, prefixes like \texttt{m1\_},
+  \texttt{m2\_} might be used. Check \texttt{e(m\_list)} for the names
+  of the generated variables.
 \item
   \texttt{hdfe(options)}: These options are passed directly to the
   \texttt{reghdfe} command \citep{correia_2016}, which \texttt{cre} uses
-  internally (if available, otherwise it uses \texttt{egen}) to
-  efficiently compute the group means, especially useful for large
-  datasets or complex fixed effects structures within the mean
-  calculation step itself (though the main model only includes the
-  means, not the full FEs). This is mainly for performance tuning.
+  internally to efficiently compute the group means, especially useful
+  for large datasets or complex fixed effects structures. This is mainly
+  for performance tuning.
 \item
-  \texttt{dropsingletons}: By default, in contrast with
-  \texttt{reghdfe}'s typical behavior in absorbing effects, observations
-  belonging to singleton groups (individuals observed only once) are not
-  excluded from the specification. However, one can use
+  \texttt{dropsingletons}: By default observations belonging to
+  singleton groups (individuals observed only once) are not excluded
+  from the specification. This is in contrast with \texttt{reghdfe}'s
+  typical behavior in absorbing effects. However, one can use
   \texttt{dropsingletons} to drop these observations from the estimation
   sample, as its done in \texttt{reghdfe}.
 
   Note: Singletons provide no within-individual variation, so their
   impact on FE-equivalent estimates is null, but they might influence
   estimates of time-invariant variables or overall sample size in
-  nonlinear models. Use with caution and understanding of the
-  implications.
+  nonlinear models.
 \item
   \texttt{drop}: If specified, the generated mean variables are dropped
   from the dataset after the estimation command completes. The default
@@ -638,267 +843,524 @@ The syntax is:
 \textbf{Stored Results:}
 
 In addition to the results stored by the \texttt{estimation\_command},
-\texttt{cre} adds the following to \texttt{e()}: * \texttt{e(m\_list)}:
-A list of the names of the generated mean variables added to the model.
-* \texttt{e(abs\_vars)}: The variable(s) specified in \texttt{abs()}.
+\texttt{cre} adds the following to \texttt{e()}:
 
-\textbf{Example Usage:}
+\begin{itemize}
+\tightlist
+\item
+  \texttt{e(m\_list)}: A list of the names of the generated mean
+  variables added to the model.
+\item
+  \texttt{e(abs\_vars)}: The variable(s) specified in \texttt{abs()}.
+\end{itemize}
 
-\begin{verbatim}
-* Linear CRE model using regress with clustered SEs
-use nlswork, clear
-xtset idcode year
-cre, abs(idcode): reg ln_wage age tenure race south union, vce(cluster idcode)
+\textbf{Dependencies:}
 
-* Check generated means
-list _m* in 1/10
-ereturn list m_list
-
-* Nonlinear CRE model (probit) with APEs
-cre, abs(idcode): probit union age tenure i.race i.south, vce(cluster idcode)
-margins, dydx(*)
-
-* Using with user-written command (example)
-* ssc install ivreg2, replace // If needed
-* cre, abs(idcode): ivreg2 lwage (tenure = age), endog(union) ... // Example syntax
-\end{verbatim}
-
-The command is designed to work with most estimation commands that
-follow standard Stata syntax. It has been tested with common commands
-like \texttt{regress}, \texttt{xtreg}, \texttt{probit}, \texttt{logit},
-\texttt{poisson}, \texttt{tobit}, \texttt{ivregress}, \texttt{ivreg2},
-etc.
+The \texttt{cre} command requires the \texttt{reghdfe}
+\citep{correia_2016} and \texttt{ftools} packages to be installed. These
+packages are used internally to efficiently handle the fixed effects
+structure.
 
 \section{Empirical Application}\label{sec-4}
 
 To illustrate the use of \texttt{cre} and compare it with alternative
 estimators, we use the \texttt{nlswork.dta} dataset bundled with Stata.
 This dataset contains panel data on young women from 1968-1988. We will
-estimate models for the log wage (\texttt{ln\_wage}) and union
-membership (\texttt{union}). The panel identifier is \texttt{idcode}.
+estimate models for the log wage (\texttt{ln\_wage}) using a linear
+model, Wages (Transformation from Log Wage) using a poisson mmodel, and
+union membership (\texttt{union}), based on a logit regression. The
+panel identifier is \texttt{idcode}.
+
+For this example, I will use a simple set of variables and interactions,
+but the approach can be easily extended to more complex specifications.
 
 \begin{verbatim}
 // Load and setup data
 webuse nlswork, clear
 xtset idcode year
-
-// Generate some variables for illustration
-gen age_sq = age^2
-gen tenure_sq = tenure^2
-egen mean_ttl_exp = mean(ttl_exp), by(idcode) // Example time-invariant variable
+gen wage = exp(ln_wage) // Transform log wage to wage for poisson model
+gen white = race==1 & race!=.
+global depvar1 ln_wage
+global depvar2 wage
+global depvar3 union
+global indep "age c.age##c.age c.tenure##c.tenure i.white i.south"
 \end{verbatim}
 
 \subsection{Linear Model: Log Wage}\label{linear-model-log-wage}
 
-We estimate a log wage equation using different methods: FE, RE,
-\texttt{xtreg,\ cre}, and \texttt{cre} with \texttt{regress}.
+I start with a simple Log-Linear model using a linear regression
+approach, estimating the model using different methods: Fixed Effects
+(FE), Random Effects (RE), Stata's built-in CRE (\texttt{xtreg,\ cre}),
+and the \texttt{cre} prefix with \texttt{xtreg,\ re}, and with
+\texttt{regress,\ cluster()}.
 
 \begin{verbatim}
-// Model specification
-global linearmod "ln_wage age age_sq tenure tenure_sq i.race i.south"
-
 // 1. Fixed Effects (xtreg, fe)
-xtreg $linearmod, fe r // Robust SEs
-
+xtreg $depvar1 $indep, fe  
+est sto m1
 // 2. Random Effects (xtreg, re)
-xtreg $linearmod mean_ttl_exp, re r // Include time-invariant variable
-
+xtreg $depvar1 $indep, re  
+est sto m2
 // 3. Stata's built-in CRE (xtreg, cre)
-xtreg $linearmod mean_ttl_exp, cre r // Requires StataNow license
-
-// 4. cre prefix with regress
-cre, abs(idcode): reg $linearmod mean_ttl_exp, vce(cluster idcode)
-ereturn list m_list // See the generated means (_m_age, _m_age_sq, etc.)
-
-// Store estimates for comparison (example using estimates store)
-estimates store fe
-estimates store re
-// estimates store xtreg_cre // If run
-estimates store cre_reg
-estimates table fe re cre_reg, b(%9.4f) se(%9.4f) stats(N r2_w r2_b r2_o) keep($linearmod _m* mean_ttl_exp _cons) title("Linear Wage Models Comparison")
+xtreg $depvar1 $indep, cre
+est sto m3
+// CRE prefix - xtreg
+cre, abs(idcode): xtreg $depvar1 $indep, re  
+est sto m4
+// CRE prefix - regress
+cre, abs(idcode): reg $depvar1 $indep, cluster(idcode)  
+est sto m5
 \end{verbatim}
 
-\textbf{Expected Results Discussion:}
+\begin{table}[H]
 
-\begin{itemize}
+\caption{\label{tbl-comp1}Comparison of Linear Models}
+
+\centering{
+
+\begin{tabular}{l*{5}{c}cccccccccc}
+\hline\hline
+&\multicolumn{3}{c}{xtreg}&\multicolumn{2}{c}{CRE}\\
+ & FE& RE& CRE &xtreg RE& regress\\
+
+\hline
+main        &            &            &            &            &            \\
+age         &       0.042&       0.047&       0.042&       0.042&       0.042\\
+            &      (9.74)&     (11.47)&     (14.78)&      (9.74)&      (9.74)\\
+c.age\#c.age &      -0.001&      -0.001&      -0.001&      -0.001&      -0.001\\
+            &     (-6.89)&     (-8.57)&    (-10.69)&     (-6.89)&     (-6.89)\\
+tenure      &       0.041&       0.048&       0.041&       0.041&       0.041\\
+            &     (18.99)&     (23.19)&     (25.19)&     (18.99)&     (18.99)\\
+c.tenure\#c.tenure&      -0.001&      -0.002&      -0.001&      -0.001&      -0.001\\
+            &    (-10.23)&    (-11.94)&    (-13.68)&    (-10.23)&    (-10.23)\\
+1.white     &       0.000&       0.090&       0.081&       0.081&       0.093\\
+            &         (.)&      (7.79)&      (6.93)&      (7.27)&      (8.02)\\
+1.south     &      -0.071&      -0.121&      -0.071&      -0.071&      -0.071\\
+            &     (-4.08)&    (-11.56)&     (-6.41)&     (-4.08)&     (-4.08)\\
+m1\_age      &            &            &            &       0.051&       0.076\\
+            &            &            &            &      (4.38)&      (5.95)\\
+m1\_c\_age\_c\_age&            &            &            &      -0.001&      -0.001\\
+            &            &            &            &     (-4.47)&     (-5.94)\\
+m1\_tenure   &            &            &            &       0.074&       0.067\\
+            &            &            &            &     (11.10)&      (9.11)\\
+m1\_c\_tenure\_c\_tenure&            &            &            &      -0.003&      -0.003\\
+            &            &            &            &     (-6.09)&     (-5.01)\\
+m1\_\_1\_south &            &            &            &      -0.105&      -0.111\\
+            &            &            &            &     (-5.14)&     (-5.36)\\
+\_cons      &       0.835&       0.715&      -0.031&       0.792&       0.769\\
+            &     (13.34)&     (12.11)&     (-0.21)&     (12.51)&     (12.16)\\
+\hline
+xt\_means    &            &            &            &            &            \\
+age         &            &            &       0.051&            &            \\
+            &            &            &      (4.82)&            &            \\
+c.age\#c.age &            &            &      -0.001&            &            \\
+            &            &            &     (-4.99)&            &            \\
+tenure      &            &            &       0.074&            &            \\
+            &            &            &     (11.88)&            &            \\
+c.tenure\#c.tenure&            &            &      -0.003&            &            \\
+            &            &            &     (-6.66)&            &            \\
+1.white     &            &            &       0.000&            &            \\
+            &            &            &         (.)&            &            \\
+1.south     &            &            &      -0.105&            &            \\
+            &            &            &     (-6.66)&            &            \\
+\hline
+\(N\)       &       28093&       28093&       28093&       28093&       28093\\
+\hline\hline
+\multicolumn{6}{l}{\footnotesize \textit{t} statistics in parentheses}\\
+\end{tabular}
+
+}
+
+\end{table}%
+
+Table~\ref{tbl-comp1} shows the comparison of the different estimation
+methods for the linear model with one-way fixed effects. Comparing the
+Fixed effect and Random Effects models, we see that the coefficients
+across specification is slightly different, as expected. The coefficient
+for ``white'' is drop in the FE model, as it is a time-invariant
+variable. We provide t-statistics as statistic of reference, because
+standard errors are too small to be displayed in the table. Perhaps the
+largest difference between the FE and RE models is the coefficient for
+\texttt{south}, which suggest a larger negative relationship with wages
+in the RE model.
+
+Turing to the \texttt{xtreg,\ CRE} (official implementation) as
+expected, provides the same coefficients, and almost identical standard
+errors as the \texttt{xtreg,\ fe} for time varying variables, with a
+coefficient for \texttt{white} that is very close to the one in the RE
+model. Notice that the \texttt{xtreg,\ cre} also includes in the output
+the coefficients for the variables averages, but as part of a different
+equation. The standard errors difference between the \texttt{xtreg,\ fe}
+and \texttt{xtreg,\ cre} is due to the different degrees of freedom used
+in the estimation.
+
+The last two columns show the results of the \texttt{cre} prefix, using
+\texttt{xtreg,\ re} and \texttt{regress,\ cluster(idcode)} as the
+estimation commands. First of all, \texttt{cre} produces idential
+results as Stata's \texttt{xtreg,\ cre}, for both main variables and the
+auxiliary variables. The last column shows the results that combines
+\texttt{cre} with \texttt{regress,\ cluster(idcode)}. Again, the
+coefficients are identical for time-varying variables, but a small
+difference for the time constant variables and the auxiliary variables.
+This happens because \texttt{xtreg,\ re} introduces a transformation of
+the data (quasi-differentiation) that is not done by \texttt{regress}.
+Also notice that the t-statistics, thus standard errors, are very
+different to the previous models. This happens because, in contrast with
+models 1-4, using \texttt{cluster(idcode)} with \texttt{regress} not
+only addresses within individual correlation, but also provides
+heteroskedasticity-robust standard errors. In the appendix, I also
+provide results for all other models using \texttt{robust} standard
+errors, which provide results identical to \texttt{regress}.\footnote{In
+  addition to the above mentioned cases, while experimental, I also
+  provide in the appendix, results for two-way fixed effects: idcode and
+  year.}
+
+\subsection{Nonlinear Model: Poisson and Logit
+Models}\label{nonlinear-model-poisson-and-logit-models}
+
+To show how \texttt{cre} can be used with nonlinear models, I estimate
+two-nonlinear models: a Poisson model for the wage variable and a logit
+model for union membership, with similar specifications as before, but
+with some differences.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Compare coefficients on time-varying variables (\texttt{age},
-  \texttt{age\_sq}, \texttt{tenure}, \texttt{tenure\_sq}) between
-  \texttt{xtreg,\ fe} and \texttt{cre,\ ...\ :\ reg}. They should be
-  identical. Compare their standard errors (clustered SEs should be very
-  similar).
+  \texttt{xtpoisson,\ fe} automatically excludes groups with a single
+  observation. Thus we also impose this restriction in the \texttt{cre}
+  prefix command(\texttt{dropsingletons} option). I report results using
+  fe and re options.
 \item
-  Compare \texttt{xtreg,\ re} coefficients with
-  \texttt{cre,\ ...\ :\ reg}. They will likely differ, especially if the
-  Hausman test (or the significance of \texttt{\_m*} vars in the
-  \texttt{cre} model) suggests correlation between effects and
-  covariates.
+  For \texttt{xthybrid}, I use the \texttt{family(poisson)} and
+  \texttt{link(log)} options to specify the Poisson model, in addition
+  to \texttt{cre} option. I also manually create the polynomial terms
+  for \texttt{age} and \texttt{tenure}, since \texttt{xthybrid} does not
+  support factor notation.
 \item
-  Highlight that \texttt{cre,\ ...\ :\ reg} (and \texttt{xtreg,\ re})
-  provide estimates for time-invariant \texttt{i.race},
-  \texttt{i.south}, and \texttt{mean\_ttl\_exp}, while
-  \texttt{xtreg,\ fe} does not.
+  For comparison, I use \texttt{xtpoisson,\ re}, \texttt{poisson}
+  regression with clutered standard errors, as well as \texttt{meglm}
+  with \texttt{family(poisson)} and \texttt{link(log)}, and allowing for
+  random effects at the individual level. For this last model, because
+  of the unique structure of \texttt{meglm}, \texttt{cre} cannot be used
+  on it directly. Instead, I used the variables created when calling
+  \texttt{poisson} to estimate the model with \texttt{meglm}.
 \item
-  If \texttt{xtreg,\ cre} is available, its results for both
-  time-varying and time-invariant coefficients and SEs should match
-  \texttt{cre,\ ...\ :\ reg} when using \texttt{vce(cluster\ idcode)}.
-\item
-  Discuss the significance of the \texttt{\_m*} variables in the
-  \texttt{cre} output as a test of the RE assumption.
-\end{itemize}
-
-\subsection{Nonlinear Model: Union
-Membership}\label{nonlinear-model-union-membership}
-
-We estimate a probit model for union membership (\texttt{union}). We
-compare pooled probit, \texttt{cre} with \texttt{probit}, and
-potentially \texttt{xthybrid} if installed.
+  In all cases, I use robust standard errors.
+\end{enumerate}
 
 \begin{verbatim}
-// Define model variables
-global nonlinmod "union age age_sq tenure tenure_sq i.race i.south"
-
-// 1. Pooled Probit (ignores individual effects)
-probit $nonlinmod mean_ttl_exp, vce(cluster idcode)
-estimates store pooled_p
-margins, dydx(*) atmeans // Example APE calculation
-
-// 2. cre prefix with probit
-cre, abs(idcode): probit $nonlinmod mean_ttl_exp, vce(cluster idcode)
-estimates store cre_p
-margins, dydx(*) // Calculate APEs
-
-// 3. (Optional) xthybrid comparison
 * ssc install xthybrid, replace // If needed
-* xthybrid $nonlinmod mean_ttl_exp, family(binomial) link(probit) vce(cluster idcode) cluster(idcode) // Syntax might vary
-* estimates store xth_p
-* margins, dydx(*) // Check if margins works easily after xthybrid
 
-// Compare APEs (example)
-estimates restore cre_p
-margins, dydx(age tenure i.race i.south mean_ttl_exp) post
-matrix m_cre = r(table)'
+webuse nlswork, clear
+xtset idcode year
+gen wage = exp(ln_wage) // Transform log wage to wage for poisson model
+gen white = race==1 & race!=.
+global depvar1 ln_wage
+global depvar2 wage
+global depvar3 union
+global indep "c.age##c.age c.tenure##c.tenure i.white i.south"
 
-estimates restore pooled_p
-margins, dydx(age tenure i.race i.south mean_ttl_exp) post
-matrix m_pooled = r(table)'
+drop if white==. | union==. | age==. | tenure==. | south==.
+bysort idcode:gen nobs=_N
+drop if nobs==1
 
-* Display comparison table (manually or using tools)
-matrix list m_pooled
-matrix list m_cre
-// Potentially compare xthybrid APEs if run
+gen age_sqr = age*age
+gen tenure_sqr  = tenure*tenure
+global indep2 "age age_sqr tenure tenure_sqr white south"
+
+xtpoisson $depvar2 $indep, fe vce(robust)
+est sto m1
+xtpoisson $depvar2 $indep, re vce(robust)
+est sto m2
+xthybrid $depvar2 $indep2 , clusterid(idcode) ///
+    vce(robust) family(poisson) link(log)  cre se
+est sto m3
+cre, abs(idcode): poisson $depvar2 $indep, cluster(idcode)
+est sto m4
+cre, abs(idcode): xtpoisson $depvar2 $indep, re vce(robust)
+est sto m5
+meglm  $depvar2 $indep m1_* || idcode:, ///
+    family(poisson) link(log) vce(robust)
+est sto m6
 \end{verbatim}
 
-\textbf{Expected Results Discussion:} * Compare the coefficients and
-especially the APEs from the pooled probit and the \texttt{cre} probit.
-Highlight expected differences due to controlling for unobserved
-heterogeneity via CRE. * Demonstrate the ease of obtaining APEs using
-\texttt{margins} after \texttt{cre,\ ...\ :\ probit}. * Show that
-\texttt{cre} allows estimating the effect of time-invariant variables
-(\texttt{i.race}, \texttt{i.south}, \texttt{mean\_ttl\_exp}) in the
-probit model while accounting for correlation with individual effects. *
-If \texttt{xthybrid} is used, compare its results (coefficients/APEs)
-and ease of use (especially with \texttt{margins}) to the \texttt{cre}
-approach. Note any differences in sample size or estimates.
+Table~\ref{tbl-poisson} presents the results using poisson models. A
+before columns 1 and 2, represent Stata's official implementation. These
+results are very similar to what we observed in Table~\ref{tbl-comp1}.
+One noticible difference is that the coefficient for south is more than
+twice as large in the RE compared to the FE model. On Column 3, we
+present the results using \texttt{xthybrid} (community contributed
+command). The coefficients are almost identical to those in the FE
+model, and slighly larger Standard errors. Note that the
+\texttt{xthybrid} command produces results that are somewhat different
+from standard Stata estimation commands. However, those coefficients
+were renamed to match the output from \texttt{cre} in columns 4 to 6.
 
-This empirical section demonstrates the flexibility of \texttt{cre} for
-both linear and nonlinear models, its ability to handle time-invariant
-variables, its compatibility with post-estimation commands, and provides
-a basis for comparison with existing methods.
+The last three columns show the results using the \texttt{cre} prefix
+with \texttt{poisson}, \texttt{xtpoisson,\ re}, and \texttt{meglm}.
+Numerically, all three approaches produce very similar, but not
+identical, results to the FE model, with \texttt{xtpoisson,\ re} and
+\texttt{meglm} producing the closest estimates in terms of coefficients
+and standard errors.
+
+\begin{table}[H]
+
+\caption{\label{tbl-poisson}Comparison of Poisson models.}
+
+\centering{
+
+\begin{tabular}{l*{6}{c}cccccccccccc}
+\hline\hline
+            &\multicolumn{2}{c}{xtpoisson} & & \multicolumn{3}{c}{CRE}\\
+            &{FE}&{RE}&{xthybrid}&{Poisson}&{xtpoisson}&{meglm}\\
+\hline
+wage        &            &            &            &            &            &            \\
+age         &       0.029&       0.040&       0.028&       0.027&       0.028&       0.028\\
+            &      (4.14)&      (5.76)&      (4.07)&      (3.92)&      (4.07)&      (4.07)\\
+c.age\#c.age &      -0.000&      -0.000&      -0.000&      -0.000&      -0.000&      -0.000\\
+            &     (-1.35)&     (-2.97)&     (-1.30)&     (-1.23)&     (-1.30)&     (-1.30)\\
+tenure      &       0.037&       0.045&       0.037&       0.036&       0.037&       0.037\\
+            &     (10.89)&     (13.24)&     (10.80)&     (10.07)&     (10.79)&     (10.80)\\
+c.tenure\#c.tenure&      -0.002&      -0.002&      -0.002&      -0.002&      -0.002&      -0.002\\
+            &     (-4.94)&     (-6.64)&     (-4.90)&     (-4.57)&     (-4.89)&     (-4.90)\\
+1.white     &       0.000&       0.095&       0.093&       0.104&       0.097&       0.093\\
+            &         (.)&      (6.82)&      (7.31)&      (6.78)&      (6.80)&      (7.31)\\
+1.south     &      -0.093&      -0.142&      -0.094&      -0.100&      -0.094&      -0.094\\
+            &     (-3.56)&     (-9.33)&     (-3.52)&     (-3.29)&     (-3.50)&     (-3.52)\\
+m1\_age      &            &            &       0.108&       0.152&       0.123&       0.108\\
+            &            &            &      (6.95)&      (7.47)&      (7.37)&      (6.95)\\
+m1\_c\_age\_c\_age&            &            &      -0.002&      -0.003&      -0.002&      -0.002\\
+            &            &            &     (-7.01)&     (-7.35)&     (-7.31)&     (-7.01)\\
+m1\_tenure   &            &            &       0.063&       0.047&       0.059&       0.063\\
+            &            &            &      (6.17)&      (3.10)&      (4.82)&      (6.17)\\
+m1\_c\_tenure\_c\_tenure&            &            &      -0.002&      -0.001&      -0.002&      -0.002\\
+            &            &            &     (-2.37)&     (-0.95)&     (-1.80)&     (-2.37)\\
+m1\_\_1\_south &            &            &      -0.087&      -0.081&      -0.087&      -0.087\\
+            &            &            &     (-2.93)&     (-2.33)&     (-2.85)&     (-2.93)\\
+\_cons      &            &       0.837&      -0.646&       1.007&       1.001&       0.953\\
+            &            &      (8.77)&     (-3.35)&     (10.42)&     (10.31)&      (9.81)\\
+\hline
+/           &            &            &            &            &            &            \\
+lnalpha     &            &      -2.238&            &            &      -2.324&            \\
+            &            &     (-7.40)&            &            &     (-7.27)&            \\
+var(\_cons[idcode])&            &            &            &            &            &       0.095\\
+            &            &            &            &            &            &     (24.88)\\
+\hline
+var(\_cons[idcode])&            &            &            &            &            &            \\
+\_cons      &            &            &       0.095&            &            &            \\
+            &            &            &     (24.88)&            &            &            \\
+\hline
+\(N\)       &       27541&       27541&       27541&       27541&       27541&       27541\\
+\hline\hline
+\multicolumn{7}{l}{\footnotesize \textit{t} statistics in parentheses}\\
+\end{tabular}
+
+}
+
+\end{table}%
+
+Because nonlinear models coefficients do not represent APE on the
+outcome variable, we also estimate them using the \texttt{margins}
+command for \textbf{age} and \textbf{tenure}. Unfortunately,
+\texttt{xtpoisson,\ fe} does not support using \texttt{margins} for the
+variable in levels, and using \texttt{xtpoisson,\ re} can only be used
+with \texttt{margins} if the option \texttt{normal} is specified at the
+moment of estimation. Similarly, \texttt{xthybrid} does not support
+\texttt{margins}. As alternative, I use
+\texttt{ppmlhdfe}\citep{correia2020} to estimate the fixed effects
+poisson model. Similarly, for \texttt{cre}, we concentrate on the cases
+that use \texttt{poisson} or \texttt{meglm}.\footnote{Note that
+  \texttt{ppmlhdfe} produces point estimates that are identical to
+  \texttt{xtpoisson,\ fe}, but with slightly different standard errors.}
+In all cases, I only present the APE for \texttt{age} and
+\texttt{tenure}.
+
+\begin{verbatim}
+qui:ppmlhdfe $depvar2 $indep, abs(idcode) vce(robust) d
+margins, dydx(age tenure) post  
+est sto m1mfx
+qui:cre, abs(idcode): poisson $depvar2 $indep, cluster(idcode)
+margins, dydx(age tenure) post  
+est sto m2mfx
+qui:meglm  $depvar2 $indep m1_* || idcode:, ///
+    family(poisson) link(log) vce(robust)
+margins, dydx(age tenure) post  
+est sto m3mfx
+\end{verbatim}
+
+The results for APE are presented in Table~\ref{tbl-mfx1}. In this
+table, we will consder \texttt{ppmlhdfe} as the benchmark, and compare
+with \texttt{cre} estimation. However, it is important to note that the
+\texttt{ppmlhdfe} command does not account the error contribution of the
+individual fixed effects, which may explain the considerable differences
+in t-statistics across implementations. Other than that, both
+\texttt{cre} models that provide results within 3 decimal places of the
+\texttt{ppmlhdfe} estimates.
+
+\begin{table}[H]
+
+\caption{\label{tbl-mfx1}Comparison of Poisson models: APE}
+
+\centering{
+
+\begin{tabular}{l*{3}{c}cccccc}
+\hline\hline
+            &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}\\
+            &\multicolumn{1}{c}{ppmlhdfe}&\multicolumn{1}{c}{CRE poisson}&\multicolumn{1}{c}{CRE meglm}\\
+\hline
+age         &       0.101&       0.100&       0.101\\
+            &     (12.11)&      (8.85)&      (9.30)\\
+tenure      &       0.132&       0.129&       0.131\\
+            &     (15.63)&     (11.24)&     (11.68)\\
+\hline
+\(N\)       &       18334&       18334&       18334\\
+\hline\hline
+\multicolumn{4}{l}{\footnotesize \textit{t} statistics in parentheses}\\
+\end{tabular}
+
+}
+
+\end{table}%
+
+Lastly, I also I provide a similar excercise for a logit model, using
+union membership as dependent variable. In addition to the previous
+restrictions, the sample only considers those with non-missing values
+for the \texttt{union} variable, and with some variation in union
+membership over time. Given the results are qualitative similar to the
+previous case, I only present results for APE of age and tenure.
+
+\begin{verbatim}
+webuse nlswork, clear
+xtset idcode year
+gen wage = exp(ln_wage) // Transform log wage to wage for poisson model
+gen white = race==1 & race!=.
+global depvar1 ln_wage
+global depvar2 wage
+global depvar3 union
+global indep "c.age##c.age c.tenure##c.tenure i.white i.south"
+
+drop if white==. | union==. | age==. | tenure==. | south==.
+bysort idcode:gen nobs=_N
+drop if nobs==1     
+bysort idcode:egen sig_union=sd(union)
+drop if sig_union==0 | sig_union==.
+
+xtlogit $depvar3 $indep, fe  
+margins, dydx(age tenure) post
+est sto m1mfx
+xtlogit $depvar3 $indep, re vce(robust)
+margins, dydx(age tenure) post
+est sto m2mfx
+qui:cre, abs(idcode): logit $depvar3 $indep, cluster(idcode)
+margins, dydx(age tenure) post
+est sto m3mfx
+qui:cre, abs(idcode): xtlogit $depvar3 $indep, re vce(robust) 
+margins, dydx(age tenure) post
+est sto m4mfx
+\end{verbatim}
+
+\begin{table}[H]
+
+\caption{\label{tbl-mfx2}Comparison of logit models: APE}
+
+\centering{
+
+\begin{tabular}{l*{4}{c}cccccccc}
+\hline\hline
+            &\multicolumn{1}{c}{(1)}&\multicolumn{1}{c}{(2)}&\multicolumn{1}{c}{(3)}&\multicolumn{1}{c}{(4)}\\
+            &\multicolumn{1}{c}{xtlogit FE}&\multicolumn{1}{c}{xtlogit RE}&\multicolumn{1}{c}{CRE logit}&\multicolumn{1}{c}{CRE xtlogit RE}\\
+\hline
+age         &      -0.000&       0.001&      -0.000&      -0.000\\
+            &     (-0.09)&      (0.52)&     (-0.12)&     (-0.10)\\
+tenure      &       0.023&       0.018&       0.020&       0.021\\
+            &      (5.71)&      (7.07)&      (6.44)&      (6.46)\\
+\hline
+\(N\)       &        7522&        7522&        7522&        7522\\
+\hline\hline
+\multicolumn{5}{l}{\footnotesize \textit{t} statistics in parentheses}\\
+\end{tabular}
+
+}
+
+\end{table}%
+
+The restrictions imposed on this last model reduce the sample to just
+over 7,500 observations. The estimated APE between \texttt{xtlogit,\ fe}
+and \texttt{xtlogit,\ re} are similar. For age, \texttt{xtlogit,\ fe}
+produces a APE of almost zero, with a small possitive effect of tenure
+(0.023). For the \texttt{xtlogit,\ re} model, the estimates for age are
+slightly larger (0.001), but still non-significant, with a slighly
+smaller effect for tenure (0.018). finally, looking at the \texttt{cre}
+results, the APE's are closer to the \texttt{xtlogit,\ fe} estimates. In
+this case, in average, an additional year of tenure is associated with a
+0.02pp increase in the probability of being a union member.
 
 \section{Monte Carlo Simulations}\label{sec-5}
 
-To assess the performance of the \texttt{cre} command, particularly in
-the nonlinear context where FE is often problematic, we conducted a
-Monte Carlo simulation study. We consider a panel data generating
-process (DGP) with one unobserved individual fixed effect (\(\alpha_i\))
-correlated with the explanatory variables. We simulate data for
-\(N=1000\) individuals over \(T=5\) periods (allowing for some attrition
-to create an unbalanced panel).
-
-The DGP is as follows:
+To assess the performance of the \texttt{cre} command, we conducted two
+Monte Carlo simulation study. The first one, shown here, considers a
+single unobserved fixed effect, since this is the most case. The second
+one, presented in the appendix, considers two unobserved fixed effects,
+which allows for a more complex structure of unbalanced panels. The data
+generating process is as follows:
 
 \begin{verbatim}
-// Simulation Setup (Conceptual Code)
-clear
+// Setup
+clear 
 set seed 12345
-local N = 1000
-local T = 5
-set obs `N'
-gen id1 = _n // Individual ID
-
-// Generate correlated fixed effect
-gen c1 = rnormal()
-
-// Generate correlated time-varying regressors
-gen x1_base = rnormal() + 0.5 * c1
-gen x2_base = rnormal() - 0.5 * c1
-
-// Expand to panel
-expand `T'
-bysort id1: gen time = _n
-xtset id1 time
-
-// Add noise and time variation
-gen x1 = x1_base + rnormal()*0.5
-gen x2 = x2_base + rnormal()*0.5
-
-// Latent outcome variable (example: linear index)
-// True coefficients: beta0=0, beta_x1=1, beta_x2=0.5, effect_alpha=1
-gen y_star = 1 * x1 + 0.5 * x2 + 1 * c1 + rnormal() // Added overall error
-
-// Simulate Unbalanced Panel (randomly drop ~20% person-years)
-gen drop_obs = runiform() < 0.2
-drop if drop_obs & time > 1 // Don't drop first obs
-
-xtset id1 time // Reset panel structure after dropping
+set obs 1000
+// Generates indicators for one-way fixed effects
+gen id1 = runiformint(1,100)
+// fixed effect is assumed follow a uniform distribution
+gen c1 = runiform(-.5,.5)
+bysort id1:replace c1 = c1[1]
+// explanatory variables are correlated with the fixed effects, 
+// thus correlated with each other
+gen x1 = runiform(-1,1)+invnormal(c1+.5)
+gen x2 = runiform(-1,1)-invnormal(c1+.5)
+// and the expected latent ey_star is a linear combination x1, x2 and c1 
+gen y_star = 1 + x1 + x2 + c1 
 \end{verbatim}
 
 We focus on the performance of \texttt{cre} for four nonlinear models
 derived from \texttt{y\_star}: probit, fractional probit, tobit, and
-poisson.
+poisson. The outcomes are generated as follows:
 
 \begin{verbatim}
-// Generate Observed Outcomes (Conceptual Code)
-// Probit
-gen y_probit = (y_star > 0)
-// Fractional Probit
-gen y_fprobit = normal(y_star/sd(y_star)) // Standardize index for 0-1 range
-replace y_fprobit = 0 if y_fprobit < 0
-replace y_fprobit = 1 if y_fprobit > 1
-// Tobit (left-censored at 0)
-gen y_tobit = max(0, y_star)
-// Poisson
-gen y_poisson = rpoisson(exp(y_star / 4)) // Rescale index to avoid huge counts
+// Generate Observed Outcomes 
+// probit
+gen y_probit = 1*(y_star-1+rnormal()>0)
+// fractional probit
+gen y_fprobit = normal(y_star-1+rnormal())
+// tobit
+gen y_tobit = max( y_star + rnormal(),0)
+// poisson
+gen y_poisson = rpoisson(exp(y_star))
 \end{verbatim}
 
-For each model type, we estimate three specifications over 1000 Monte
-Carlo replications: 1. \textbf{Unfeasible Benchmark:} Model estimated
-including the true fixed effect \texttt{c1} as a regressor. 2.
-\textbf{Pooled Estimator:} Model estimated ignoring \texttt{c1} (and
-using cluster-robust SEs). 3. \textbf{CRE Estimator:} Model estimated
-using \texttt{cre,\ abs(id1):\ ...} including \texttt{x1}, \texttt{x2}
-but not \texttt{c1}.
+For each model type, we estimate three specifications over 10000 Monte
+Carlo replications:
 
-Example estimation commands within the simulation loop:
-
-\begin{verbatim}
-// Probit Example inside loop
-// 1. Benchmark
-probit y_probit x1 x2 c1, vce(cluster id1)
-// 2. Pooled
-probit y_probit x1 x2, vce(cluster id1)
-// 3. CRE
-cre, abs(id1): probit y_probit x1 x2, vce(cluster id1)
-\end{verbatim}
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{Unfeasible Benchmark:} Model estimated including the true
+  fixed effect \texttt{c1} as a regressor.
+\item
+  \textbf{Pooled Estimator:} Model estimated ignoring \texttt{c1}
+\item
+  \textbf{CRE Estimator:} Model estimated using
+  \texttt{cre,\ abs(id1):\ ...} including \texttt{x1}, \texttt{x2} but
+  not \texttt{c1}.
+\end{enumerate}
 
 We compare the distribution of estimated coefficients (or APEs for
 probit/fractional) for \texttt{x1} and \texttt{x2} across the methods,
 focusing on bias and Mean Absolute Error (MAE) relative to the
 unfeasible benchmark average. We use the \texttt{parallel} command
-\citep{vegayon2019} for efficiency. \emph{(Self-note: Ensure the
-simulation code file provided is complete and functional)}.
+\citep{vegayon2019} for efficiency.
 
 The results of the simulation are presented in Figure~\ref{fig-cre} and
 Table~\ref{tbl-cre}. Figure~\ref{fig-cre} shows the densities of the
@@ -909,12 +1371,12 @@ simulations, while Table~\ref{tbl-cre} summarizes the bias and MAE.
 
 \centering{
 
-\pandocbounded{\includegraphics[keepaspectratio]{simulation/fig1.png}}
+\pandocbounded{\includegraphics[keepaspectratio]{sim_v2/fig1.png}}
 
 }
 
-\caption{\label{fig-cre}\emph{Estimated marginal effects/Coefficient
-densities for non-linear models}}
+\caption{\label{fig-cre}Estimated APE/Coefficient densities for
+non-linear models}
 
 \end{figure}%
 
@@ -935,57 +1397,85 @@ effect. This demonstrates the utility of the CRE method for obtaining
 consistent estimates in nonlinear panel models where FE is not viable
 and RE assumptions are violated.
 
-\begin{table}[H]
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\caption{Bias and MAE for the estimated APE/Coefficients for non-linear
+models (Coefficients for \texttt{x1})}\label{tbl-cre}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Probit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+FProbit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Tobit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Poisson
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Probit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+FProbit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Tobit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Poisson
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+True:Bias & 0.000 & -0.000 & -0.000 & -0.000 \\
+True:MAE & 0.015 & 0.032 & 0.045 & 0.023 \\
+Pool:Bias & 0.035 & 0.081 & 0.120 & 0.125 \\
+Pool:MAE & 0.035 & 0.081 & 0.120 & 0.125 \\
+CRE:Bias & -0.000 & -0.001 & 0.000 & 0.003 \\
+CRE:MAE & 0.016 & 0.035 & 0.049 & 0.026 \\
+\emph{N} & 10000 & 10000 & 10000 & 10000 \\
+\end{longtable}
 
-\caption{\label{tbl-cre}\emph{Bias and MAE for the estimated marginal
-effects/Coefficients for non-linear models}}
-
-\centering{
-
-\{\textless{} include simulation/table1.txt \textgreater\}
-
-}
-
-\end{table}%
+In the appendix, we extend the simulation to a more complex setting with
+two unobserved fixed effects, which further illustrates the use of the
+CRE approach in handling unbalanced panels and multiple dimensions of
+unobserved heterogeneity. As mentioned before, however, when multiple
+fixed effects are used, statistical inference remains challenging, and
+the results should be interpreted with caution.
 
 \section{Conclusion}\label{sec-6}
 
 This paper introduced \texttt{cre}, a versatile Stata prefix command
 designed to simplify the estimation of Correlated Random Effects (CRE)
-models based on the Mundlak (1978) specification. The CRE approach
-provides a valuable bridge between standard Fixed Effects and Random
-Effects models, offering several advantages: it allows for the
+models based on the \citet{mundlak1978pooling} specification. The CRE
+approach provides a valuable bridge between standard Fixed Effects and
+Random Effects models, offering several advantages: it allows for the
 estimation of time-invariant variable effects (unlike FE) while
 providing consistent estimates for time-varying coefficients even when
 the strict RE exogeneity assumption fails (matching FE estimates in
 linear models).
 
 The primary contribution of the \texttt{cre} command lies in its
-\textbf{flexibility and ease of use}. As a prefix command, it can be
-applied to a wide array of Stata's linear and nonlinear estimation
-commands, including user-written ones. It automatically handles the
-generation of individual means for time-varying covariates, supports
-both balanced and unbalanced panels using established methods
-\citep{wooldridge2019}, and integrates seamlessly with factor variables
-and post-estimation tools like \texttt{margins} for calculating Average
-Partial Effects, which is particularly crucial for interpreting
-nonlinear models.
-
-We demonstrated through empirical examples that \texttt{cre} replicates
-the behavior of specialized commands like \texttt{xtreg,\ cre} in the
-linear case while extending functionality to other estimators. For
-nonlinear models, we showed how \texttt{cre} provides a practical way to
-obtain consistent estimates and APEs, addressing the limitations of FE
-and the potentially strong assumptions of RE. Monte Carlo simulations
-further confirmed that the CRE approach implemented by \texttt{cre}
-effectively reduces bias in nonlinear models with correlated unobserved
-effects.
+flexibility and ease of use. As a prefix command, it can be applied to a
+wide array of standard Stata estimation commands, including user-written
+ones. It automatically handles the generation of individual means for
+time-varying covariates, supports both balanced and unbalanced panels,
+and integrates seamlessly with factor variables and post-estimation
+tools like \texttt{margins} for calculating Average Partial Effects,
+which is particularly crucial for interpreting nonlinear models.
 
 While \texttt{cre} offers a significant simplification for estimating
-static CRE models, it currently \textbf{does not address dynamic panel
-models}. The inclusion of lagged dependent variables introduces further
-econometric challenges (e.g., the initial conditions problem) that
-require specialized estimators beyond the scope of this command.
+static, and potentially dynamic, CRE models, it does not address dynamic
+auto-regressive panel models. The inclusion of lagged dependent
+variables introduces further econometric challenges (e.g., the initial
+conditions problem) that require specialized estimators beyond the scope
+of this command.
 
 In summary, the \texttt{cre} command provides applied researchers with a
 user-friendly and powerful tool for leveraging the benefits of the
@@ -1002,10 +1492,239 @@ pushing this project forward. I am also grateful to the Editor and an
 anonymous referee for their constructive comments on a previous version,
 which significantly improved the focus and clarity of this paper.
 
+\section{References}\label{references}
+
+\renewcommand{\bibsection}{}
+\bibliography{references.bib}
+
+\newpage
+\appendix
+
+\section*{Appendix}\label{appendix}
+\addcontentsline{toc}{section}{Appendix}
+
+\subsection*{Empirical ilustration: extended
+results}\label{sec-appendix1}
+\addcontentsline{toc}{subsection}{Empirical ilustration: extended
+results}
+
+In Section~\ref{sec-4}, I presented the empirical application of the
+\texttt{cre} command using the \texttt{nlswork.dta} dataset, using
+default standard errors. In this appendix, I provide additional results
+using robust and clustered standard errors, as well as results for
+two-way fixed effects models.
+
+As it can be seen in Table~\ref{tbl-app1}, once robust standard errors
+are used, the results for the linear model are almost identical to the
+benchmark FE model, in terms of coefficients and standard errors
+(proxied by t-statistics).
+
+\begin{table}[H]
+
+\caption{\label{tbl-app1}Comparison of Linear Models: Robust/Clustered
+Standard Errors}
+
+\centering{
+
+\begin{tabular}{l*{5}{c}cccccccccc}
+\hline\hline&\multicolumn{3}{c}{}&\multicolumn{2}{c}{CRE}\\
+ &xtreg FE&xtreg RE&xtreg CRE &xtreg RE& regress\\
+\hline
+main        &            &            &            &            &            \\
+age         &       0.042&       0.047&       0.042&       0.042&       0.042\\
+            &      (9.74)&     (11.47)&      (9.74)&      (9.74)&      (9.74)\\
+c.age\#c.age &      -0.001&      -0.001&      -0.001&      -0.001&      -0.001\\
+            &     (-6.89)&     (-8.57)&     (-6.89)&     (-6.89)&     (-6.89)\\
+tenure      &       0.041&       0.048&       0.041&       0.041&       0.041\\
+            &     (18.99)&     (23.19)&     (18.99)&     (18.99)&     (18.99)\\
+c.tenure\#c.tenure&      -0.001&      -0.002&      -0.001&      -0.001&      -0.001\\
+            &    (-10.23)&    (-11.94)&    (-10.23)&    (-10.23)&    (-10.23)\\
+1.white     &       0.000&       0.090&       0.081&       0.081&       0.093\\
+            &         (.)&      (7.79)&      (7.27)&      (7.27)&      (8.02)\\
+1.south     &      -0.071&      -0.121&      -0.071&      -0.071&      -0.071\\
+            &     (-4.08)&    (-11.56)&     (-4.08)&     (-4.08)&     (-4.08)\\
+m1\_age      &            &            &            &       0.051&       0.076\\
+            &            &            &            &      (4.38)&      (5.95)\\
+m1\_c\_age\_c\_age&            &            &            &      -0.001&      -0.001\\
+            &            &            &            &     (-4.47)&     (-5.94)\\
+m1\_tenure   &            &            &            &       0.074&       0.067\\
+            &            &            &            &     (11.10)&      (9.11)\\
+m1\_c\_tenure\_c\_tenure&            &            &            &      -0.003&      -0.003\\
+            &            &            &            &     (-6.09)&     (-5.01)\\
+m1\_\_1\_south &            &            &            &      -0.105&      -0.111\\
+            &            &            &            &     (-5.14)&     (-5.36)\\
+\_cons      &       0.835&       0.715&      -0.031&       0.792&       0.769\\
+            &     (13.34)&     (12.11)&     (-0.21)&     (12.51)&     (12.16)\\
+\hline
+xt\_means    &            &            &            &            &            \\
+age         &            &            &       0.051&            &            \\
+            &            &            &      (4.38)&            &            \\
+c.age\#c.age &            &            &      -0.001&            &            \\
+            &            &            &     (-4.47)&            &            \\
+tenure      &            &            &       0.074&            &            \\
+            &            &            &     (11.10)&            &            \\
+c.tenure\#c.tenure&            &            &      -0.003&            &            \\
+            &            &            &     (-6.09)&            &            \\
+1.white     &            &            &       0.000&            &            \\
+            &            &            &         (.)&            &            \\
+1.south     &            &            &      -0.105&            &            \\
+            &            &            &     (-5.14)&            &            \\
+\hline
+\(N\)       &       28093&       28093&       28093&       28093&       28093\\
+\hline\hline
+\multicolumn{6}{l}{\footnotesize \textit{t} statistics in parentheses}\\
+\end{tabular}
+
+}
+
+\end{table}%
+
+In Table~\ref{tbl-app2}, I present the results for a two-way fixed
+effects model, using the \texttt{cre}, absorbing both \texttt{idcode}
+and \texttt{year} as fixed effects. As benchmark I use the
+\texttt{reghdfe} command for the linear model, and \texttt{ppmlhdfe} for
+the Poisson model. Three things to notice:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \texttt{cre} produces the same point estimates as \texttt{reghdfe},
+  showing the potential of the command.
+\item
+  \texttt{cre} produces very similar point estimates to
+  \texttt{ppmlhdfe}. This is similar to what we observed in the main
+  text.
+\item
+  Standard errors are different, and no correction was applied for
+  \texttt{cre} other than providing \texttt{robust} standard errors.
+\end{enumerate}
+
+\begin{table}[H]
+
+\caption{\label{tbl-app2}Comparison of Linear Models: Two-way Fixed
+Effects}
+
+\centering{
+
+\begin{tabular}{l*{4}{c}cccccccc}
+\hline\hline
+            &\multicolumn{1}{c}{reghdfe}&\multicolumn{1}{c}{ppmlhdfe}&\multicolumn{1}{c}{CRE regress}&\multicolumn{1}{c}{CRE poisson}\\
+\hline
+main        &            &            &            &            \\
+age         &       0.067&       0.069&       0.067&       0.067\\
+            &      (5.59)&      (3.24)&      (4.08)&      (2.38)\\
+c.age\#c.age &      -0.001&      -0.001&      -0.001&      -0.001\\
+            &    (-13.11)&     (-7.71)&    (-10.07)&     (-5.89)\\
+tenure      &       0.041&       0.037&       0.041&       0.037\\
+            &     (24.07)&     (13.66)&     (17.40)&      (9.96)\\
+c.tenure\#c.tenure&      -0.001&      -0.002&      -0.001&      -0.002\\
+            &    (-13.27)&     (-6.22)&     (-9.37)&     (-4.84)\\
+1.white     &       0.000&       0.000&       0.092&       0.099\\
+            &         (.)&         (.)&     (16.58)&     (11.97)\\
+1.south     &      -0.070&      -0.090&      -0.070&      -0.099\\
+            &     (-5.33)&     (-4.64)&     (-4.14)&     (-3.48)\\
+m1\_age      &            &            &       0.068&       0.093\\
+            &            &            &      (3.69)&      (2.94)\\
+m2\_age      &            &            &      -0.131&      -0.174\\
+            &            &            &     (-3.88)&     (-3.67)\\
+m1\_c\_age\_c\_age&            &            &      -0.001&      -0.002\\
+            &            &            &     (-7.27)&     (-6.54)\\
+m2\_c\_age\_c\_age&            &            &       0.003&       0.003\\
+            &            &            &      (3.98)&      (3.83)\\
+m1\_tenure   &            &            &       0.068&       0.046\\
+            &            &            &     (14.58)&      (3.69)\\
+m2\_tenure   &            &            &       0.068&       0.149\\
+            &            &            &      (3.09)&      (5.16)\\
+m1\_c\_tenure\_c\_tenure&            &            &      -0.003&      -0.001\\
+            &            &            &     (-8.04)&     (-0.96)\\
+m2\_c\_tenure\_c\_tenure&            &            &      -0.010&      -0.013\\
+            &            &            &     (-3.09)&     (-3.18)\\
+m1\_\_1\_south &            &            &      -0.108&      -0.076\\
+            &            &            &     (-6.04)&     (-2.49)\\
+m2\_\_1\_south &            &            &       0.313&       0.065\\
+            &            &            &      (0.54)&      (0.08)\\
+\_cons      &       0.506&       0.581&       0.440&       0.455\\
+            &      (1.52)&      (0.90)&      (0.96)&      (0.55)\\
+\hline
+\(N\)       &       27541&       27541&       28093&       28093\\
+\hline\hline
+\multicolumn{5}{l}{\footnotesize \textit{t} statistics in parentheses}\\
+\end{tabular}
+
+}
+
+\end{table}%
+
+\subsection*{Two-way Fixed Effects}\label{sec-appendix2}
+\addcontentsline{toc}{subsection}{Two-way Fixed Effects}
+
+In this appendix, I provide results for the two-way fixed effects model,
+using the \texttt{cre} command with two variables in the \texttt{abs()}
+option. The results are similar to those presented in the main text.
+
+\begin{figure}[H]
+
+\centering{
+
+\pandocbounded{\includegraphics[keepaspectratio]{sim_v2/fig1_two.png}}
+
+}
+
+\caption{\label{fig-cre2}Estimated APE/Coefficient densities for
+non-linear models: Two-way fixed effects}
+
+\end{figure}%
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}
+  >{\centering\arraybackslash}p{(\linewidth - 8\tabcolsep) * \real{0.2000}}@{}}
+\caption{Bias and MAE for the estimated APE/Coefficients for non-linear
+models TWFE: Coefficients for
+\texttt{x1}}\label{tbl-cre2}\tabularnewline
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Probit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+FProbit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Tobit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Poisson
+\end{minipage} \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Probit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+FProbit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Tobit
+\end{minipage} & \begin{minipage}[b]{\linewidth}\centering
+Poisson
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+True:Bias & -0.000 & 0.000 & 0.000 & -0.000 \\
+True:MAE & 0.014 & 0.031 & 0.042 & 0.022 \\
+Pool:Bias & 0.037 & 0.088 & 0.130 & 0.134 \\
+Pool:MAE & 0.037 & 0.088 & 0.130 & 0.134 \\
+CRE:Bias & -0.001 & -0.002 & -0.001 & 0.006 \\
+CRE:MAE & 0.018 & 0.038 & 0.051 & 0.027 \\
+\emph{N} & 10000 & 10000 & 10000 & 10000 \\
+\end{longtable}
+
 \clearpage
 
 \bibliographystyle{sj}
-\bibliography{references.bib}
 
 
 \begin{aboutauthors}
